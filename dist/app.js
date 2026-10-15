@@ -1,4 +1,4 @@
-/* Skills handbook — expandable table, chevrons, resizable columns, Rules tab */
+/* My Skills Handbook - expandable table, chevrons, resizable columns, Rules tab */
 
 (() => {
   const COL_STORAGE = "skills-handbook-col-widths-v1";
