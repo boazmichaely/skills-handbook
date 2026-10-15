@@ -55,21 +55,11 @@ Configured in `handbook.json` (see `handbook.example.json`):
 
 `dist/skills.json` is generated locally and gitignored. Do not commit secrets; `handbook.json` should hold paths only.
 
-## Recover an older version (GitHub)
+## Older version on GitHub (before Cursor / Claude / Tailwind tabs)
 
-Before the Cursor / Claude / Tailwind tabs change, a full copy was saved on GitHub:
+Saved on GitHub so you can open or restore it anytime:
 
-- Branch: https://github.com/boazmichaely/skills-handbook/tree/backup/pre-cursor-claude-tabs
-- Named snapshot (tag): https://github.com/boazmichaely/skills-handbook/tree/backup-pre-dual-runtime
+- https://github.com/boazmichaely/skills-handbook/tree/backup/pre-cursor-claude-tabs
+- https://github.com/boazmichaely/skills-handbook/tree/backup-pre-dual-runtime
 
-To put that version back on your Mac as `main`:
-
-```bash
-cd ~/Projects/skills-handbook
-git fetch origin
-git checkout main
-git reset --hard backup-pre-dual-runtime
-git push --force-with-lease origin main
-```
-
-Only do that if you intend to throw away the newer Cursor/Claude tabs work on `main`.
+On either page: green **Code** button → **Download ZIP** if you just want that snapshot as files.
