@@ -523,9 +523,9 @@
     });
   }
 
-  document.querySelectorAll(".filters.origin button[data-origin]").forEach((btn) => {
+  document.querySelectorAll(".filter-links.origin button[data-origin]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".filters.origin button[data-origin]").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".filter-links.origin button[data-origin]").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       state.origin = btn.dataset.origin;
       state.openSkillId = null;
