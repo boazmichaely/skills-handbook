@@ -6,3 +6,7 @@ __pycache__/
 
 # Optional machine-local overrides (paths only; prefer committing handbook.json with ~ defaults).
 # handbook.json
+
+# Accidental gws generate-skills output (never commit)
+skills/
+docs/skills.md
