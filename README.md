@@ -33,7 +33,7 @@ python3 generate.py
 | --- | --- |
 | **Cursor** | Skills + Rules from the Cursor paths in `handbook.json` |
 | **Claude** | Skills + Rules from the Claude paths (plus optional `~/.claude/CLAUDE.md`) |
-| **Tailwind** | Config tab (`tailwind.json`, tokens status, cache, artifacts) |
+| **Config** | Local Tailwind / token settings (`tailwind.json`, status, cache, artifacts) |
 
 Under Cursor / Claude: **Skills** or **Rules**. Skills keep All / Personal / Tailwind origin filters.
 
@@ -47,10 +47,10 @@ Configured in `handbook.json` (see `handbook.example.json`):
 | `claude.skills_dir` / `claude.rules_dir` | `~/.claude/skills`, `~/.claude/rules` | Claude tab |
 | `claude.claude_md_path` | `~/.claude/CLAUDE.md` | Included as a Claude rule when present |
 | `personal_skills_dir` | optional | Personal origin (folders with `SKILL.md`) |
-| `tailwind_dir` | `~/.config/tailwind` | Tailwind tab |
+| `tailwind_dir` | `~/.config/tailwind` | Config tab |
 | `tailwind_module_skills_dir` | auto | Tailwind origin; empty means `{cursor.skills_dir}/.lola/modules/tailwind/skills` when present |
 | `agents_skills_dir` | `~/.agents/skills` | Also Tailwind origin (gws-cli installs here + into Claude skills) |
-| token paths | `~/code/...` | Tailwind tab secret status only (never raw secret values) |
+| token paths | `~/code/...` | Config tab secret status only (never raw secret values) |
 
 **Origin filters:** if the Lola Tailwind module skills dir exists, skills listed there are Tailwind; other installed skills are Personal. `personal_skills_dir` overrides. Categories use built-in heuristics.
 

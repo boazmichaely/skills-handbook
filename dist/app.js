@@ -382,10 +382,10 @@
     document.querySelectorAll(".tabs button").forEach((b) => {
       b.classList.toggle("active", b.dataset.runtime === runtime);
     });
-    const isTw = runtime === "tailwind";
-    if (els.runtimePane) els.runtimePane.classList.toggle("hidden", isTw);
-    if (els.configView) els.configView.classList.toggle("hidden", !isTw);
-    if (isTw) {
+    const isConfig = runtime === "config";
+    if (els.runtimePane) els.runtimePane.classList.toggle("hidden", isConfig);
+    if (els.configView) els.configView.classList.toggle("hidden", !isConfig);
+    if (isConfig) {
       renderConfigSourceFilters();
       renderConfigTable();
       return;
