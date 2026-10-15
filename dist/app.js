@@ -35,6 +35,7 @@
     search: document.getElementById("search"),
     rulesSearch: document.getElementById("rules-search"),
     configSearch: document.getElementById("config-search"),
+    originFilter: document.getElementById("origin-filter"),
     catFilters: document.getElementById("cat-filters"),
     configSourceFilters: document.getElementById("config-source-filters"),
     skillsView: document.getElementById("skills-view"),
@@ -173,14 +174,13 @@
 
   function renderCatFilters() {
     const chips = [
-      `<span class="filter-label" aria-hidden="true">
-        <svg class="filter-icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+      `<span class="filter-label" title="Filter by category">
+        <svg class="filter-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
           <path fill="currentColor" d="M1.5 2.5h13l-5 5.5V13l-3 1.5V8L1.5 2.5z"/>
         </svg>
-        Category
       </span>`,
       `<div class="filters cats">`,
-      `<button type="button" data-cat="all" class="${state.category === "all" ? "active" : ""}">All</button>`,
+      `<button type="button" data-cat="all" class="${state.category === "all" ? "active" : ""}">All categories</button>`,
     ];
     for (const c of state.categories) {
       chips.push(
@@ -524,16 +524,15 @@
     });
   }
 
-  document.querySelectorAll(".filters.origin button[data-origin]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".filters.origin button[data-origin]").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.origin = btn.dataset.origin;
+  if (els.originFilter) {
+    els.originFilter.value = state.origin || "all";
+    els.originFilter.addEventListener("change", () => {
+      state.origin = els.originFilter.value || "all";
       state.openSkillId = null;
       state.showFullSkill = false;
       renderSkillsTable();
     });
-  });
+  }
 
   document.querySelectorAll(".tabs button[data-runtime]").forEach((btn) => {
     btn.addEventListener("click", () => setRuntime(btn.dataset.runtime));
