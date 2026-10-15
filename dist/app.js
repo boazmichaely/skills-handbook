@@ -35,7 +35,6 @@
     search: document.getElementById("search"),
     rulesSearch: document.getElementById("rules-search"),
     configSearch: document.getElementById("config-search"),
-    originFilter: document.getElementById("origin-filter"),
     catFilters: document.getElementById("cat-filters"),
     configSourceFilters: document.getElementById("config-source-filters"),
     skillsView: document.getElementById("skills-view"),
@@ -524,15 +523,16 @@
     });
   }
 
-  if (els.originFilter) {
-    els.originFilter.value = state.origin || "all";
-    els.originFilter.addEventListener("change", () => {
-      state.origin = els.originFilter.value || "all";
+  document.querySelectorAll(".filters.origin button[data-origin]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".filters.origin button[data-origin]").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.origin = btn.dataset.origin;
       state.openSkillId = null;
       state.showFullSkill = false;
       renderSkillsTable();
     });
-  }
+  });
 
   document.querySelectorAll(".tabs button[data-runtime]").forEach((btn) => {
     btn.addEventListener("click", () => setRuntime(btn.dataset.runtime));
