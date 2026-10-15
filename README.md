@@ -1,6 +1,6 @@
 # My Skills Handbook
 
-Browse Cursor and Claude skills/rules on your Mac, plus local Tailwind config (paths and status only - never raw secrets).
+Browse local Cursor and Claude skills/rules, plus Tailwind config (paths and status only - never raw secrets).
 
 ## Install
 
