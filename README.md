@@ -60,7 +60,7 @@ Configured in `handbook.json` (see `handbook.example.json`):
 Before the Cursor / Claude / Tailwind tabs change, a full copy was saved on GitHub:
 
 - Branch: https://github.com/boazmichaely/skills-handbook/tree/backup/pre-cursor-claude-tabs
-- Tag: https://github.com/boazmichaely/skills-handbook/releases/tag/backup-pre-dual-runtime (tag `backup-pre-dual-runtime`)
+- Named snapshot (tag): https://github.com/boazmichaely/skills-handbook/tree/backup-pre-dual-runtime
 
 To put that version back on your Mac as `main`:
 
