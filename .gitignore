@@ -1,0 +1,8 @@
+# Regenerated catalog (can include full skill / rule bodies).
+dist/skills.json
+
+__pycache__/
+*.pyc
+
+# Optional machine-local overrides (paths only; prefer committing handbook.json with ~ defaults).
+# handbook.json

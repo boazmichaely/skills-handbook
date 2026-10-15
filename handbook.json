@@ -1,0 +1,10 @@
+{
+  "skills_dir": "~/.cursor/skills",
+  "rules_dir": "~/.cursor/rules",
+  "personal_skills_dir": "~/Projects/my-cursor-skills",
+  "tailwind_dir": "~/.config/tailwind",
+  "tailwind_module_skills_dir": "",
+  "jira_apikey_path": "~/code/.jira-apikey",
+  "rh_offline_token_path": "~/code/.rh-offline-token",
+  "rh_offline_token_plain_path": "~/code/.rh-offline-token.plain"
+}

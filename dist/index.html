@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Skills handbook</title>
+  <link rel="stylesheet" href="styles.css?v=tabs3" />
+</head>
+<body>
+  <div id="app">
+    <header class="top">
+      <div class="brand">
+        <h1>Skills handbook</h1>
+        <nav class="tabs" aria-label="Handbook section">
+          <button type="button" data-tab="skills" class="active">Skills</button>
+          <button type="button" data-tab="rules">Rules</button>
+          <button type="button" data-tab="config">Config</button>
+        </nav>
+      </div>
+      <p id="meta" class="meta">Loading…</p>
+    </header>
+
+    <section id="skills-view" class="view">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search name, category, description, MCP…" autocomplete="off" />
+        <div class="filters origin" role="group" aria-label="Origin filter">
+          <button type="button" data-origin="all" class="active">All</button>
+          <button type="button" data-origin="personal">Personal</button>
+          <button type="button" data-origin="tailwind">Tailwind</button>
+        </div>
+      </div>
+      <div id="cat-filters" class="filters cats" role="group" aria-label="Category filter"></div>
+      <div id="count" class="count"></div>
+      <div class="table-wrap">
+        <table id="skills-table" class="resizable">
+          <colgroup>
+            <col class="col-toggle" style="width: 2.5rem" />
+            <col class="col-name" data-col="skills-name" style="width: 18%" />
+            <col class="col-cat" data-col="skills-cat" style="width: 16%" />
+            <col class="col-desc" data-col="skills-desc" style="width: auto" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col-toggle" aria-label="Expand"></th>
+              <th class="col-name" data-col="skills-name">Name<span class="col-resizer" data-resize="skills-name"></span></th>
+              <th class="col-cat" data-col="skills-cat">Categories<span class="col-resizer" data-resize="skills-cat"></span></th>
+              <th class="col-desc" data-col="skills-desc">Description</th>
+            </tr>
+          </thead>
+          <tbody id="skills-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="rules-view" class="view hidden">
+      <div class="toolbar">
+        <input id="rules-search" type="search" placeholder="Search rules…" autocomplete="off" />
+      </div>
+      <div id="rules-count" class="count"></div>
+      <div class="table-wrap">
+        <table id="rules-table" class="resizable">
+          <colgroup>
+            <col class="col-toggle" style="width: 2.5rem" />
+            <col class="col-name" data-col="rules-name" style="width: 28%" />
+            <col class="col-desc" data-col="rules-desc" style="width: auto" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col-toggle" aria-label="Expand"></th>
+              <th class="col-name" data-col="rules-name">Name<span class="col-resizer" data-resize="rules-name"></span></th>
+              <th class="col-desc" data-col="rules-desc">Description</th>
+            </tr>
+          </thead>
+          <tbody id="rules-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="config-view" class="view hidden">
+      <div class="toolbar">
+        <input id="config-search" type="search" placeholder="Search config name, value, path…" autocomplete="off" />
+        <div class="filters origin" id="config-source-filters" role="group" aria-label="Config source filter"></div>
+      </div>
+      <div id="config-count" class="count"></div>
+      <div class="table-wrap">
+        <table id="config-table" class="resizable">
+          <colgroup>
+            <col class="col-toggle" style="width: 2.5rem" />
+            <col class="col-name" data-col="config-name" style="width: 28%" />
+            <col class="col-desc" data-col="config-value" style="width: auto" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col-toggle" aria-label="Expand"></th>
+              <th class="col-name" data-col="config-name">Name<span class="col-resizer" data-resize="config-name"></span></th>
+              <th class="col-desc" data-col="config-value">Value</th>
+            </tr>
+          </thead>
+          <tbody id="config-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="vendor/marked.min.js"></script>
+  <script src="app.js?v=config1"></script>
+</body>
+</html>
