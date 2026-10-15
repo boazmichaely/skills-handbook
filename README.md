@@ -49,6 +49,7 @@ Configured in `handbook.json` (see `handbook.example.json`):
 | `personal_skills_dir` | optional | Personal origin (folders with `SKILL.md`) |
 | `tailwind_dir` | `~/.config/tailwind` | Tailwind tab |
 | `tailwind_module_skills_dir` | auto | Tailwind origin; empty means `{cursor.skills_dir}/.lola/modules/tailwind/skills` when present |
+| `agents_skills_dir` | `~/.agents/skills` | Also Tailwind origin (gws-cli installs here + into Claude skills) |
 | token paths | `~/code/...` | Tailwind tab secret status only (never raw secret values) |
 
 **Origin filters:** if the Lola Tailwind module skills dir exists, skills listed there are Tailwind; other installed skills are Personal. `personal_skills_dir` overrides. Categories use built-in heuristics.

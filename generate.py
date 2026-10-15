@@ -29,6 +29,8 @@ DEFAULT_CONFIG: dict = {
     "tailwind_dir": "~/.config/tailwind",
     # Empty = auto: {cursor.skills_dir}/.lola/modules/tailwind/skills
     "tailwind_module_skills_dir": "",
+    # Tailwind gws-cli (and similar) install agent skills here - treat as Tailwind origin
+    "agents_skills_dir": "~/.agents/skills",
     "jira_apikey_path": "~/code/.jira-apikey",
     "rh_offline_token_path": "~/code/.rh-offline-token",
     "rh_offline_token_plain_path": "~/code/.rh-offline-token.plain",
@@ -43,6 +45,7 @@ CLAUDE_MD_PATH: Path | None = HOME / ".claude" / "CLAUDE.md"
 TW_DIR = HOME / ".config" / "tailwind"
 PERSONAL_SKILLS_DIR: Path | None = None
 TW_MODULE_SKILLS_DIR: Path | None = None
+AGENTS_SKILLS_DIR: Path | None = HOME / ".agents" / "skills"
 JIRA_APIKEY_PATH = HOME / "code" / ".jira-apikey"
 RH_OFFLINE_TOKEN_PATH = HOME / "code" / ".rh-offline-token"
 RH_OFFLINE_TOKEN_PLAIN_PATH = HOME / "code" / ".rh-offline-token.plain"
@@ -120,7 +123,7 @@ def load_config() -> dict:
 
 def apply_config(cfg: dict) -> None:
     global CURSOR_SKILLS_DIR, CURSOR_RULES_DIR, CLAUDE_SKILLS_DIR, CLAUDE_RULES_DIR, CLAUDE_MD_PATH
-    global SKILLS_DIR, TW_DIR, PERSONAL_SKILLS_DIR, TW_MODULE_SKILLS_DIR
+    global SKILLS_DIR, TW_DIR, PERSONAL_SKILLS_DIR, TW_MODULE_SKILLS_DIR, AGENTS_SKILLS_DIR
     global JIRA_APIKEY_PATH, RH_OFFLINE_TOKEN_PATH, RH_OFFLINE_TOKEN_PLAIN_PATH
 
     cursor = cfg.get("cursor") or {}
@@ -149,6 +152,12 @@ def apply_config(cfg: dict) -> None:
         auto = CURSOR_SKILLS_DIR / ".lola" / "modules" / "tailwind" / "skills"
         TW_MODULE_SKILLS_DIR = auto if auto.is_dir() else None
 
+    agents = str(cfg.get("agents_skills_dir") or "").strip()
+    if agents:
+        AGENTS_SKILLS_DIR = expand_path(agents)
+    else:
+        AGENTS_SKILLS_DIR = None
+
 
 def discover_skill_ids(directory: Path | None) -> set[str]:
     """Skill folder names that contain SKILL.md (or skill.md)."""
@@ -171,10 +180,11 @@ def build_origin_map(
 ) -> dict[str, str]:
     """Tag each installed skill as personal or tailwind.
 
-    Prefer Lola Tailwind module membership when present; personal_skills_dir
-    overrides (and is the fallback when Lola is absent).
+    Tailwind set = Lola module skills plus agent skills (e.g. gws-cli →
+    ~/.agents/skills). personal_skills_dir wins when an id is in both.
+    If a Tailwind signal exists, anything else installed is Personal.
     """
-    have_lola = bool(tailwind_ids)
+    have_tailwind = bool(tailwind_ids)
     have_personal = bool(personal_ids)
     out: dict[str, str] = {}
     for sid in installed_ids:
@@ -182,7 +192,7 @@ def build_origin_map(
             out[sid] = "personal"
         elif sid in tailwind_ids:
             out[sid] = "tailwind"
-        elif have_lola:
+        elif have_tailwind:
             out[sid] = "personal"
         elif have_personal:
             out[sid] = "tailwind"
@@ -999,7 +1009,10 @@ def main() -> None:
         )
 
     personal_ids = discover_skill_ids(PERSONAL_SKILLS_DIR)
-    tailwind_ids = discover_skill_ids(TW_MODULE_SKILLS_DIR)
+    # Lola-installed Tailwind skills + gws-cli (etc.) agent skills
+    tailwind_ids = discover_skill_ids(TW_MODULE_SKILLS_DIR) | discover_skill_ids(
+        AGENTS_SKILLS_DIR
+    )
 
     cursor_skills, cursor_meta = collect_runtime_skills(
         CURSOR_SKILLS_DIR,

@@ -11,6 +11,7 @@
   "personal_skills_dir": "~/Projects/my-cursor-skills",
   "tailwind_dir": "~/.config/tailwind",
   "tailwind_module_skills_dir": "",
+  "agents_skills_dir": "~/.agents/skills",
   "jira_apikey_path": "~/code/.jira-apikey",
   "rh_offline_token_path": "~/code/.rh-offline-token",
   "rh_offline_token_plain_path": "~/code/.rh-offline-token.plain"
