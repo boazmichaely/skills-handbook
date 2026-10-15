@@ -5,7 +5,7 @@ Local browser UI for Cursor skills, rules, and Tailwind config on your machine.
 ## Install
 
 ```bash
-git clone <repo-url> skills-handbook
+git clone https://github.com/boazmichaely/skills-handbook.git
 cd skills-handbook
 cp handbook.example.json handbook.json   # edit paths if needed
 ```
