@@ -1,6 +1,6 @@
-# Skills handbook
+# My Skills Handbook
 
-Local browser UI for Cursor skills, rules, and Tailwind config on your machine.
+Local browser UI for Cursor and Claude skills/rules, plus Tailwind config on your machine.
 
 ## Install
 
@@ -27,19 +27,37 @@ Regenerate only:
 python3 generate.py
 ```
 
+## UI
+
+| Top tab | Contents |
+| --- | --- |
+| **Cursor** | Skills + Rules from the Cursor paths in `handbook.json` |
+| **Claude** | Skills + Rules from the Claude paths (plus optional `~/.claude/CLAUDE.md`) |
+| **Tailwind** | Config tab (`tailwind.json`, tokens status, cache, artifacts) |
+
+Under Cursor / Claude: **Skills** or **Rules**. Skills keep All / Personal / Tailwind origin filters.
+
 ## Data sources
 
 Configured in `handbook.json` (see `handbook.example.json`):
 
 | Key | Default | Used for |
 | --- | --- | --- |
-| `skills_dir` | `~/.cursor/skills` | Skills tab (each folder with `SKILL.md`) |
-| `rules_dir` | `~/.cursor/rules` | Rules tab (`*.mdc`) |
-| `personal_skills_dir` | optional | Personal origin: folders here with `SKILL.md` |
-| `tailwind_dir` | `~/.config/tailwind` | Config tab (`tailwind.json`, `config.json`, `env.sh`, cache, artifacts) |
-| `tailwind_module_skills_dir` | auto | Tailwind origin; empty means `{skills_dir}/.lola/modules/tailwind/skills` when present |
-| `jira_apikey_path` / `rh_offline_token_*` | `~/code/...` | Config tab secret status only (never raw values in the UI for redacted files) |
+| `cursor.skills_dir` / `cursor.rules_dir` | `~/.cursor/skills`, `~/.cursor/rules` | Cursor tab |
+| `claude.skills_dir` / `claude.rules_dir` | `~/.claude/skills`, `~/.claude/rules` | Claude tab |
+| `claude.claude_md_path` | `~/.claude/CLAUDE.md` | Included as a Claude rule when present |
+| `personal_skills_dir` | optional | Personal origin (folders with `SKILL.md`) |
+| `tailwind_dir` | `~/.config/tailwind` | Tailwind tab |
+| `tailwind_module_skills_dir` | auto | Tailwind origin; empty means `{cursor.skills_dir}/.lola/modules/tailwind/skills` when present |
+| token paths | `~/code/...` | Tailwind tab secret status only (never raw secret values) |
 
-**Origin filters (Personal / Tailwind):** if the Lola Tailwind module skills dir exists, skills listed there are Tailwind; other installed skills are Personal. If `personal_skills_dir` is set, those skill IDs are treated as Personal (override). Categories use built-in heuristics.
+**Origin filters:** if the Lola Tailwind module skills dir exists, skills listed there are Tailwind; other installed skills are Personal. `personal_skills_dir` overrides. Categories use built-in heuristics.
 
-`dist/skills.json` is generated locally and gitignored (can contain full skill bodies). Do not commit secrets; `handbook.json` should hold paths only.
+`dist/skills.json` is generated locally and gitignored. Do not commit secrets; `handbook.json` should hold paths only.
+
+## Revert
+
+Pre dual-runtime snapshot:
+
+- Git branch: `backup/pre-cursor-claude-tabs`
+- Git tag: `backup-pre-dual-runtime`

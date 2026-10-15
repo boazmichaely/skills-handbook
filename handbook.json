@@ -1,6 +1,13 @@
 {
-  "skills_dir": "~/.cursor/skills",
-  "rules_dir": "~/.cursor/rules",
+  "cursor": {
+    "skills_dir": "~/.cursor/skills",
+    "rules_dir": "~/.cursor/rules"
+  },
+  "claude": {
+    "skills_dir": "~/.claude/skills",
+    "rules_dir": "~/.claude/rules",
+    "claude_md_path": "~/.claude/CLAUDE.md"
+  },
   "personal_skills_dir": "~/Projects/my-cursor-skills",
   "tailwind_dir": "~/.config/tailwind",
   "tailwind_module_skills_dir": "",

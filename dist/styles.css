@@ -144,7 +144,40 @@ body {
   border-radius: 1px;
 }
 
-/* Filters stay as compact pills — visually distinct from tabs */
+/* Secondary Skills / Rules under Cursor or Claude */
+.subtabs {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0.65rem 0 0.15rem;
+}
+
+.subtabs button {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  border-radius: 0.4rem;
+  padding: 0.32rem 0.8rem;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.subtabs button:hover {
+  color: var(--ink);
+}
+
+.subtabs button.active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.runtime-pane.hidden {
+  display: none;
+}
+
+/* Filters stay as compact pills - visually distinct from tabs */
 .filters button {
   border: 1px solid var(--line);
   background: var(--panel);

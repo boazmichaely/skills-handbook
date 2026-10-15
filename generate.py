@@ -16,11 +16,18 @@ DIST = ROOT / "dist"
 HOME = Path.home()
 
 DEFAULT_CONFIG: dict = {
-    "skills_dir": "~/.cursor/skills",
-    "rules_dir": "~/.cursor/rules",
+    "cursor": {
+        "skills_dir": "~/.cursor/skills",
+        "rules_dir": "~/.cursor/rules",
+    },
+    "claude": {
+        "skills_dir": "~/.claude/skills",
+        "rules_dir": "~/.claude/rules",
+        "claude_md_path": "~/.claude/CLAUDE.md",
+    },
     "personal_skills_dir": "",
     "tailwind_dir": "~/.config/tailwind",
-    # Empty = auto: {skills_dir}/.lola/modules/tailwind/skills
+    # Empty = auto: {cursor.skills_dir}/.lola/modules/tailwind/skills
     "tailwind_module_skills_dir": "",
     "jira_apikey_path": "~/code/.jira-apikey",
     "rh_offline_token_path": "~/code/.rh-offline-token",
@@ -28,15 +35,21 @@ DEFAULT_CONFIG: dict = {
 }
 
 # Populated by load_config() / apply_config()
-SKILLS_DIR = HOME / ".cursor" / "skills"
-RULES_DIR = HOME / ".cursor" / "rules"
+CURSOR_SKILLS_DIR = HOME / ".cursor" / "skills"
+CURSOR_RULES_DIR = HOME / ".cursor" / "rules"
+CLAUDE_SKILLS_DIR = HOME / ".claude" / "skills"
+CLAUDE_RULES_DIR = HOME / ".claude" / "rules"
+CLAUDE_MD_PATH: Path | None = HOME / ".claude" / "CLAUDE.md"
 TW_DIR = HOME / ".config" / "tailwind"
 PERSONAL_SKILLS_DIR: Path | None = None
 TW_MODULE_SKILLS_DIR: Path | None = None
 JIRA_APIKEY_PATH = HOME / "code" / ".jira-apikey"
 RH_OFFLINE_TOKEN_PATH = HOME / "code" / ".rh-offline-token"
 RH_OFFLINE_TOKEN_PLAIN_PATH = HOME / "code" / ".rh-offline-token.plain"
+# Active while scanning one runtime's skills
 ORIGIN_BY_ID: dict[str, str] = {}
+# Legacy aliases used by collect_config support-cases path
+SKILLS_DIR = CURSOR_SKILLS_DIR
 
 # At most 7 handbook categories (stable labels for filters + table).
 CATEGORY_ORDER = [
@@ -63,9 +76,32 @@ def expand_path(value: str | Path) -> Path:
     return Path(str(value)).expanduser()
 
 
+def _deep_merge(base: dict, overlay: dict) -> dict:
+    out = dict(base)
+    for key, val in overlay.items():
+        if key in out and isinstance(out[key], dict) and isinstance(val, dict):
+            out[key] = _deep_merge(out[key], val)
+        else:
+            out[key] = val
+    return out
+
+
+def _normalize_legacy_config(data: dict) -> dict:
+    """Map flat skills_dir/rules_dir (pre dual-runtime) onto cursor.*."""
+    data = dict(data)
+    cursor = dict(data.get("cursor") or {})
+    if "skills_dir" in data and "skills_dir" not in cursor:
+        cursor["skills_dir"] = data.pop("skills_dir")
+    if "rules_dir" in data and "rules_dir" not in cursor:
+        cursor["rules_dir"] = data.pop("rules_dir")
+    if cursor:
+        data["cursor"] = cursor
+    return data
+
+
 def load_config() -> dict:
     """Merge handbook.json (or handbook.example.json) over defaults."""
-    cfg = dict(DEFAULT_CONFIG)
+    cfg = _deep_merge({}, DEFAULT_CONFIG)
     for name in ("handbook.json", "handbook.example.json"):
         path = ROOT / name
         if not path.is_file():
@@ -76,19 +112,28 @@ def load_config() -> dict:
             raise SystemExit(f"Invalid {path.name}: {exc}") from exc
         if not isinstance(data, dict):
             raise SystemExit(f"{path.name} must be a JSON object")
-        for key, val in data.items():
-            if key in DEFAULT_CONFIG:
-                cfg[key] = val
+        data = _normalize_legacy_config(data)
+        cfg = _deep_merge(cfg, {k: v for k, v in data.items() if k in DEFAULT_CONFIG or k in ("cursor", "claude")})
         break
     return cfg
 
 
 def apply_config(cfg: dict) -> None:
-    global SKILLS_DIR, RULES_DIR, TW_DIR, PERSONAL_SKILLS_DIR, TW_MODULE_SKILLS_DIR
+    global CURSOR_SKILLS_DIR, CURSOR_RULES_DIR, CLAUDE_SKILLS_DIR, CLAUDE_RULES_DIR, CLAUDE_MD_PATH
+    global SKILLS_DIR, TW_DIR, PERSONAL_SKILLS_DIR, TW_MODULE_SKILLS_DIR
     global JIRA_APIKEY_PATH, RH_OFFLINE_TOKEN_PATH, RH_OFFLINE_TOKEN_PLAIN_PATH
 
-    SKILLS_DIR = expand_path(cfg["skills_dir"])
-    RULES_DIR = expand_path(cfg["rules_dir"])
+    cursor = cfg.get("cursor") or {}
+    claude = cfg.get("claude") or {}
+
+    CURSOR_SKILLS_DIR = expand_path(cursor.get("skills_dir") or DEFAULT_CONFIG["cursor"]["skills_dir"])
+    CURSOR_RULES_DIR = expand_path(cursor.get("rules_dir") or DEFAULT_CONFIG["cursor"]["rules_dir"])
+    CLAUDE_SKILLS_DIR = expand_path(claude.get("skills_dir") or DEFAULT_CONFIG["claude"]["skills_dir"])
+    CLAUDE_RULES_DIR = expand_path(claude.get("rules_dir") or DEFAULT_CONFIG["claude"]["rules_dir"])
+    claude_md = str(claude.get("claude_md_path") or "").strip()
+    CLAUDE_MD_PATH = expand_path(claude_md) if claude_md else None
+
+    SKILLS_DIR = CURSOR_SKILLS_DIR
     TW_DIR = expand_path(cfg["tailwind_dir"])
     JIRA_APIKEY_PATH = expand_path(cfg["jira_apikey_path"])
     RH_OFFLINE_TOKEN_PATH = expand_path(cfg["rh_offline_token_path"])
@@ -101,7 +146,7 @@ def apply_config(cfg: dict) -> None:
     if module:
         TW_MODULE_SKILLS_DIR = expand_path(module)
     else:
-        auto = SKILLS_DIR / ".lola" / "modules" / "tailwind" / "skills"
+        auto = CURSOR_SKILLS_DIR / ".lola" / "modules" / "tailwind" / "skills"
         TW_MODULE_SKILLS_DIR = auto if auto.is_dir() else None
 
 
@@ -818,12 +863,12 @@ def collect_config() -> list[dict]:
     return rows
 
 
-def rule_record(path: Path) -> dict:
+def rule_record(path: Path, *, rule_id: str | None = None, runtime: str = "cursor") -> dict:
     text = path.read_text(encoding="utf-8", errors="replace")
-    # optional mdc frontmatter
     title = path.stem.replace("-", " ")
     description = ""
     body = text
+    paths_scope = ""
     if text.startswith("---"):
         parts = text.split("---", 2)
         if len(parts) >= 3:
@@ -834,105 +879,194 @@ def rule_record(path: Path) -> dict:
             m = re.search(r"(?m)^title:\s*[\"']?(.*?)[\"']?\s*$", fm)
             if m:
                 title = m.group(1).strip()
+            m = re.search(r"(?ms)^paths:\s*\n((?:[ \t]+.+\n?)*)", fm)
+            if m:
+                paths_scope = one_line(m.group(1), 160)
+            else:
+                m = re.search(r"(?m)^paths:\s*[\"']?(.*?)[\"']?\s*$", fm)
+                if m:
+                    paths_scope = m.group(1).strip()
     if not description:
         for line in body.splitlines():
             line = line.strip()
             if line and not line.startswith("#"):
                 description = line
                 break
+    rid = rule_id or path.stem
+    ext = path.suffix.lstrip(".") or "md"
     return {
-        "id": path.stem,
+        "id": rid,
         "name": title,
         "summary": one_line(description or path.name),
         "full_markdown": text,
         "path": _display_path(path),
-        "search_blob": f"{path.stem} {title} {description}".lower(),
+        "runtime": runtime,
+        "ext": ext,
+        "paths": paths_scope,
+        "search_blob": f"{rid} {title} {description} {paths_scope} {runtime}".lower(),
     }
 
 
-def main() -> None:
-    global ORIGIN_BY_ID
-
-    cfg = load_config()
-    apply_config(cfg)
-
-    DIST.mkdir(parents=True, exist_ok=True)
-    if not SKILLS_DIR.is_dir():
-        raise SystemExit(f"Skills directory not found: {SKILLS_DIR}")
-
-    installed_dirs = [
+def list_skill_dirs(skills_dir: Path) -> list[Path]:
+    if not skills_dir.is_dir():
+        return []
+    return [
         child
-        for child in sorted(SKILLS_DIR.iterdir(), key=lambda p: p.name.lower())
+        for child in sorted(skills_dir.iterdir(), key=lambda p: p.name.lower())
         if child.is_dir()
         and not child.name.startswith(".")
-        and (
-            (child / "SKILL.md").is_file()
-            or (child / "skill.md").is_file()
-        )
+        and ((child / "SKILL.md").is_file() or (child / "skill.md").is_file())
     ]
+
+
+def collect_runtime_skills(
+    skills_dir: Path,
+    *,
+    runtime: str,
+    personal_ids: set[str],
+    tailwind_ids: set[str],
+) -> tuple[list[dict], dict]:
+    global ORIGIN_BY_ID
+    installed_dirs = list_skill_dirs(skills_dir)
     installed_ids = {d.name for d in installed_dirs}
-    personal_ids = discover_skill_ids(PERSONAL_SKILLS_DIR)
-    tailwind_ids = discover_skill_ids(TW_MODULE_SKILLS_DIR)
     ORIGIN_BY_ID = build_origin_map(
         installed_ids,
         personal_ids=personal_ids,
         tailwind_ids=tailwind_ids,
     )
-
     skills: list[dict] = []
     for child in installed_dirs:
         rec = skill_record(child)
         if rec:
+            rec["runtime"] = runtime
             skills.append(rec)
-
-    rules: list[dict] = []
-    if RULES_DIR.is_dir():
-        for p in sorted(RULES_DIR.glob("*.mdc")):
-            rules.append(rule_record(p))
-
-    config = collect_config()
-
-    # category counts for UI chips
     cat_counts = {c: 0 for c in CATEGORY_ORDER}
     for sk in skills:
         for c in sk["categories"]:
             cat_counts[c] = cat_counts.get(c, 0) + 1
-
     n_personal = sum(1 for s in skills if s["origin"] == "personal")
     n_tailwind = sum(1 for s in skills if s["origin"] == "tailwind")
-
-    payload = {
-        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "skills_dir": str(SKILLS_DIR),
-        "rules_dir": str(RULES_DIR),
-        "personal_skills_dir": str(PERSONAL_SKILLS_DIR) if PERSONAL_SKILLS_DIR else None,
-        "tailwind_module_skills_dir": (
-            str(TW_MODULE_SKILLS_DIR) if TW_MODULE_SKILLS_DIR else None
-        ),
+    meta = {
+        "skills_dir": str(skills_dir),
+        "count": len(skills),
+        "category_counts": cat_counts,
         "origin_discovery": {
             "personal_ids": len(personal_ids),
             "tailwind_ids": len(tailwind_ids),
             "personal": n_personal,
             "tailwind": n_tailwind,
         },
-        "count": len(skills),
-        "rules_count": len(rules),
-        "config_count": len(config),
+    }
+    return skills, meta
+
+
+def collect_cursor_rules(rules_dir: Path) -> list[dict]:
+    rules: list[dict] = []
+    if not rules_dir.is_dir():
+        return rules
+    for p in sorted(rules_dir.glob("*.mdc")):
+        rules.append(rule_record(p, runtime="cursor"))
+    return rules
+
+
+def collect_claude_rules(rules_dir: Path, claude_md: Path | None) -> list[dict]:
+    rules: list[dict] = []
+    if claude_md is not None and claude_md.is_file():
+        rules.append(
+            rule_record(claude_md, rule_id="CLAUDE.md", runtime="claude")
+        )
+    if rules_dir.is_dir():
+        for p in sorted(rules_dir.rglob("*.md")):
+            if not p.is_file():
+                continue
+            try:
+                rel = p.relative_to(rules_dir)
+            except ValueError:
+                rel = Path(p.name)
+            rid = str(rel.with_suffix("")).replace("\\", "/")
+            rules.append(rule_record(p, rule_id=rid, runtime="claude"))
+    return rules
+
+
+def main() -> None:
+    cfg = load_config()
+    apply_config(cfg)
+
+    DIST.mkdir(parents=True, exist_ok=True)
+    if not CURSOR_SKILLS_DIR.is_dir() and not CLAUDE_SKILLS_DIR.is_dir():
+        raise SystemExit(
+            f"No skills directories found (cursor={CURSOR_SKILLS_DIR}, claude={CLAUDE_SKILLS_DIR})"
+        )
+
+    personal_ids = discover_skill_ids(PERSONAL_SKILLS_DIR)
+    tailwind_ids = discover_skill_ids(TW_MODULE_SKILLS_DIR)
+
+    cursor_skills, cursor_meta = collect_runtime_skills(
+        CURSOR_SKILLS_DIR,
+        runtime="cursor",
+        personal_ids=personal_ids,
+        tailwind_ids=tailwind_ids,
+    )
+    cursor_rules = collect_cursor_rules(CURSOR_RULES_DIR)
+
+    claude_skills, claude_meta = collect_runtime_skills(
+        CLAUDE_SKILLS_DIR,
+        runtime="claude",
+        personal_ids=personal_ids,
+        tailwind_ids=tailwind_ids,
+    )
+    claude_rules = collect_claude_rules(CLAUDE_RULES_DIR, CLAUDE_MD_PATH)
+
+    config = collect_config()
+
+    payload = {
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "personal_skills_dir": str(PERSONAL_SKILLS_DIR) if PERSONAL_SKILLS_DIR else None,
+        "tailwind_module_skills_dir": (
+            str(TW_MODULE_SKILLS_DIR) if TW_MODULE_SKILLS_DIR else None
+        ),
+        "tailwind_dir": str(TW_DIR),
         "categories": CATEGORY_ORDER,
-        "category_counts": cat_counts,
-        "skills": skills,
-        "rules": rules,
+        "cursor": {
+            **cursor_meta,
+            "rules_dir": str(CURSOR_RULES_DIR),
+            "rules_count": len(cursor_rules),
+            "skills": cursor_skills,
+            "rules": cursor_rules,
+        },
+        "claude": {
+            **claude_meta,
+            "rules_dir": str(CLAUDE_RULES_DIR),
+            "claude_md_path": str(CLAUDE_MD_PATH) if CLAUDE_MD_PATH else None,
+            "rules_count": len(claude_rules),
+            "skills": claude_skills,
+            "rules": claude_rules,
+        },
         "config": config,
+        "config_count": len(config),
+        # Flat aliases (Cursor) for older handbook UI / scripts
+        "skills": cursor_skills,
+        "rules": cursor_rules,
+        "count": len(cursor_skills),
+        "rules_count": len(cursor_rules),
+        "skills_dir": str(CURSOR_SKILLS_DIR),
+        "rules_dir": str(CURSOR_RULES_DIR),
+        "category_counts": cursor_meta["category_counts"],
+        "origin_discovery": cursor_meta["origin_discovery"],
     }
     out = DIST / "skills.json"
     out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {out} ({len(skills)} skills, {len(rules)} rules, {len(config)} config rows)")
     print(
-        f"  origin: {n_personal} personal, {n_tailwind} tailwind"
-        f" (lola={len(tailwind_ids)}, personal_dir={len(personal_ids)})"
+        f"Wrote {out}\n"
+        f"  cursor: {len(cursor_skills)} skills, {len(cursor_rules)} rules\n"
+        f"  claude: {len(claude_skills)} skills, {len(claude_rules)} rules\n"
+        f"  tailwind config: {len(config)} rows"
     )
-    for c in CATEGORY_ORDER:
-        print(f"  {c}: {cat_counts.get(c, 0)}")
+    od = cursor_meta["origin_discovery"]
+    print(
+        f"  cursor origin: {od['personal']} personal, {od['tailwind']} tailwind"
+        f" (lola={od['tailwind_ids']}, personal_dir={od['personal_ids']})"
+    )
 
 
 if __name__ == "__main__":

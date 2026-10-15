@@ -1,15 +1,16 @@
-/* My Skills Handbook - expandable table, chevrons, resizable columns, Rules tab */
+/* My Skills Handbook - Cursor / Claude / Tailwind */
 
 (() => {
   const COL_STORAGE = "skills-handbook-col-widths-v1";
 
   const state = {
-    skills: [],
-    rules: [],
+    cursor: { skills: [], rules: [] },
+    claude: { skills: [], rules: [] },
     config: [],
     categories: [],
     generatedAt: "",
-    tab: "skills",
+    runtime: "cursor",
+    section: "skills",
     origin: "all",
     category: "all",
     query: "",
@@ -39,9 +40,10 @@
     skillsView: document.getElementById("skills-view"),
     rulesView: document.getElementById("rules-view"),
     configView: document.getElementById("config-view"),
+    runtimePane: document.getElementById("runtime-pane"),
+    sectionTabs: document.getElementById("section-tabs"),
   };
 
-  /* Solid disclosure triangle (points right; CSS rotates when open) */
   const CHEVRON_SVG =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="9,5 19,12 9,19" fill="currentColor"/></svg>';
 
@@ -69,6 +71,10 @@
     return `<button type="button" class="chevron" data-action="toggle" data-id="${escapeHtml(id)}"
       aria-expanded="${expanded ? "true" : "false"}"
       aria-label="${expanded ? "Collapse" : "Expand"}">${CHEVRON_SVG}</button>`;
+  }
+
+  function activeBundle() {
+    return state.runtime === "claude" ? state.claude : state.cursor;
   }
 
   function loadColWidths() {
@@ -128,7 +134,8 @@
 
   function visibleSkills() {
     const q = state.query.trim().toLowerCase();
-    return state.skills.filter((sk) => {
+    const skills = activeBundle().skills || [];
+    return skills.filter((sk) => {
       if (state.origin !== "all" && sk.origin !== state.origin) return false;
       if (state.category !== "all" && !(sk.categories || []).includes(state.category)) return false;
       if (!q) return true;
@@ -138,7 +145,8 @@
 
   function visibleRules() {
     const q = state.rulesQuery.trim().toLowerCase();
-    return state.rules.filter((r) => !q || (r.search_blob || "").includes(q));
+    const rules = activeBundle().rules || [];
+    return rules.filter((r) => !q || (r.search_blob || "").includes(q));
   }
 
   function configSources() {
@@ -213,8 +221,9 @@
   }
 
   function renderSkillsTable() {
+    const bundle = activeBundle();
     const items = visibleSkills();
-    els.count.textContent = `Showing ${items.length} of ${state.skills.length} skills`;
+    els.count.textContent = `Showing ${items.length} of ${bundle.skills.length} skills`;
     const rows = [];
     for (const sk of items) {
       const open = sk.id === state.openSkillId;
@@ -230,7 +239,7 @@
             <span><span class="badge ${escapeHtml(sk.origin)}">${escapeHtml(sk.origin)}</span></span>
           </div>
         </td>
-        <td>${cats || '<span class="badge cat">—</span>'}</td>
+        <td>${cats || '<span class="badge cat">-</span>'}</td>
         <td class="desc-cell">${escapeHtml(sk.summary || "")}</td>
       </tr>`);
       if (open) rows.push(skillExpandHtml(sk));
@@ -242,11 +251,15 @@
     const body = state.showFullRule
       ? `<div class="prose">${renderMd(rule.full_markdown || "")}</div>`
       : `<div class="prose"><p>${escapeHtml(rule.summary || "")}</p></div>`;
+    const paths = rule.paths
+      ? `<div><span class="label">Paths</span> <code class="path">${escapeHtml(rule.paths)}</code></div>`
+      : "";
     return `<tr class="expand-row" data-expand-for="${escapeHtml(rule.id)}">
       <td colspan="3">
         <div class="expand">
           <div class="expand-label">Expanded detail</div>
           <code class="path">${escapeHtml(rule.path)}</code>
+          ${paths}
           <div class="actions">
             <button type="button" class="primary" data-action="toggle-full-rule" data-id="${escapeHtml(rule.id)}">
               ${state.showFullRule ? "Show summary" : "View full rule"}
@@ -259,17 +272,22 @@
   }
 
   function renderRulesTable() {
+    const bundle = activeBundle();
     const items = visibleRules();
-    els.rulesCount.textContent = `Showing ${items.length} of ${state.rules.length} rules`;
+    els.rulesCount.textContent = `Showing ${items.length} of ${bundle.rules.length} rules`;
     const rows = [];
     for (const rule of items) {
       const open = rule.id === state.openRuleId;
+      const ext = rule.ext || "mdc";
+      const idLabel = String(rule.id).includes(".")
+        ? rule.id
+        : `${rule.id}.${ext}`;
       rows.push(`<tr class="rule-row ${open ? "open" : ""}" data-id="${escapeHtml(rule.id)}">
         <td class="col-toggle">${chevronBtn(open, rule.id)}</td>
         <td>
           <div class="name-cell">
             <span>${escapeHtml(rule.name || rule.id)}</span>
-            <span class="id">${escapeHtml(rule.id)}.mdc</span>
+            <span class="id">${escapeHtml(idLabel)}</span>
           </div>
         </td>
         <td class="desc-cell">${escapeHtml(rule.summary || "")}</td>
@@ -350,17 +368,49 @@
       rows.join("") || `<tr><td colspan="3">No matching config rows.</td></tr>`;
   }
 
-  function setTab(tab) {
-    state.tab = tab;
+  function updateMeta() {
+    const c = state.cursor;
+    const cl = state.claude;
+    els.meta.textContent =
+      `Cursor ${c.skills.length} skills / ${c.rules.length} rules · ` +
+      `Claude ${cl.skills.length} skills / ${cl.rules.length} rules · ` +
+      `${state.config.length} config · generated ${state.generatedAt}`;
+  }
+
+  function setRuntime(runtime) {
+    state.runtime = runtime;
     document.querySelectorAll(".tabs button").forEach((b) => {
-      b.classList.toggle("active", b.dataset.tab === tab);
+      b.classList.toggle("active", b.dataset.runtime === runtime);
     });
-    if (els.skillsView) els.skillsView.classList.toggle("hidden", tab !== "skills");
-    if (els.rulesView) els.rulesView.classList.toggle("hidden", tab !== "rules");
-    if (els.configView) els.configView.classList.toggle("hidden", tab !== "config");
-    if (tab === "config") {
+    const isTw = runtime === "tailwind";
+    if (els.runtimePane) els.runtimePane.classList.toggle("hidden", isTw);
+    if (els.configView) els.configView.classList.toggle("hidden", !isTw);
+    if (isTw) {
       renderConfigSourceFilters();
       renderConfigTable();
+      return;
+    }
+    state.openSkillId = null;
+    state.showFullSkill = false;
+    state.openRuleId = null;
+    state.showFullRule = false;
+    setSection(state.section);
+  }
+
+  function setSection(section) {
+    state.section = section;
+    if (els.sectionTabs) {
+      els.sectionTabs.querySelectorAll("button").forEach((b) => {
+        b.classList.toggle("active", b.dataset.section === section);
+      });
+    }
+    if (els.skillsView) els.skillsView.classList.toggle("hidden", section !== "skills");
+    if (els.rulesView) els.rulesView.classList.toggle("hidden", section !== "rules");
+    if (section === "skills") {
+      renderCatFilters();
+      renderSkillsTable();
+    } else {
+      renderRulesTable();
     }
   }
 
@@ -466,9 +516,9 @@
     });
   }
 
-  document.querySelectorAll(".filters.origin button").forEach((btn) => {
+  document.querySelectorAll(".filters.origin button[data-origin]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".filters.origin button").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".filters.origin button[data-origin]").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       state.origin = btn.dataset.origin;
       state.openSkillId = null;
@@ -477,11 +527,16 @@
     });
   });
 
-  document.querySelectorAll(".tabs button").forEach((btn) => {
-    btn.addEventListener("click", () => setTab(btn.dataset.tab));
+  document.querySelectorAll(".tabs button[data-runtime]").forEach((btn) => {
+    btn.addEventListener("click", () => setRuntime(btn.dataset.runtime));
   });
 
-  // Ensure th can host absolute resizers
+  if (els.sectionTabs) {
+    els.sectionTabs.querySelectorAll("button[data-section]").forEach((btn) => {
+      btn.addEventListener("click", () => setSection(btn.dataset.section));
+    });
+  }
+
   document.querySelectorAll("thead th[data-col]").forEach((th) => {
     th.style.position = "sticky";
   });
@@ -489,30 +544,27 @@
   applyColWidths();
   initColumnResize();
 
-  // Bust browser cache so Config rows appear after regenerate.py
   fetch(`skills.json?v=${Date.now()}`)
     .then((r) => {
-      if (!r.ok) throw new Error("skills.json missing — run generate.py or ./serve.sh");
+      if (!r.ok) throw new Error("skills.json missing - run generate.py or ./serve.sh");
       return r.json();
     })
     .then((data) => {
-      state.skills = data.skills || [];
-      state.rules = data.rules || [];
+      const cursor = data.cursor || {};
+      const claude = data.claude || {};
+      state.cursor = {
+        skills: cursor.skills || data.skills || [],
+        rules: cursor.rules || data.rules || [],
+      };
+      state.claude = {
+        skills: claude.skills || [],
+        rules: claude.rules || [],
+      };
       state.config = Array.isArray(data.config) ? data.config : [];
       state.categories = data.categories || [];
       state.generatedAt = data.generated_at || "";
-      const cfgN = state.config.length;
-      els.meta.textContent = `${state.skills.length} skills · ${state.rules.length} rules · ${cfgN} config · generated ${state.generatedAt}`;
-      if (cfgN === 0) {
-        console.warn(
-          "Handbook: skills.json has no config[] rows. Re-run generate.py and hard-refresh (Cmd+Shift+R)."
-        );
-      }
-      renderCatFilters();
-      renderConfigSourceFilters();
-      renderSkillsTable();
-      renderRulesTable();
-      renderConfigTable();
+      updateMeta();
+      setRuntime(state.runtime);
     })
     .catch((err) => {
       els.meta.textContent = String(err.message || err);
