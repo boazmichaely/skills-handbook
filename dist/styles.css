@@ -177,28 +177,60 @@ body {
   display: none;
 }
 
-/* Filters stay as compact pills - visually distinct from tabs */
+/* Labeled filter groups - chips, not tabs */
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+}
+
+.filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.filter-icon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
 .filters button {
   border: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--ink);
+  background: transparent;
+  color: var(--muted);
   border-radius: 999px;
-  padding: 0.35rem 0.85rem;
+  padding: 0.22rem 0.65rem;
   font: inherit;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
+  font-weight: 500;
   cursor: pointer;
 }
 
+.filters button:hover {
+  color: var(--ink);
+  border-color: #a8a29e;
+  background: rgba(28, 25, 23, 0.03);
+}
+
 .filters.origin button.active {
-  background: var(--accent);
+  background: var(--accent-soft);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent);
+  font-weight: 650;
 }
 
 .filters.cats button.active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
+  background: var(--cat-soft);
+  border-color: var(--cat);
+  color: var(--cat);
+  font-weight: 650;
 }
 
 .view {
@@ -232,10 +264,12 @@ body {
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 0.25rem;
 }
 
-.filters.cats { margin-bottom: 0.45rem; }
+.filter-group.cats {
+  margin-bottom: 0.45rem;
+}
 
 .view.hidden { display: none; }
 
@@ -592,7 +626,7 @@ body.col-resizing {
   .dep-grid { grid-template-columns: 1fr; }
   .expand { margin-left: 0.35rem; margin-right: 0.35rem; }
   .toolbar { flex-direction: column; align-items: stretch; }
-  .filters.origin { width: 100%; }
+  .filter-group.origin { width: 100%; }
   table.resizable { min-width: 100%; font-size: 0.9rem; }
   .name-cell .id { display: none; }
   .meta {

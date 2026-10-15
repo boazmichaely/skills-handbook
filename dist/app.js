@@ -173,7 +173,14 @@
 
   function renderCatFilters() {
     const chips = [
-      `<button type="button" data-cat="all" class="${state.category === "all" ? "active" : ""}">All categories</button>`,
+      `<span class="filter-label" aria-hidden="true">
+        <svg class="filter-icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+          <path fill="currentColor" d="M1.5 2.5h13l-5 5.5V13l-3 1.5V8L1.5 2.5z"/>
+        </svg>
+        Category
+      </span>`,
+      `<div class="filters cats">`,
+      `<button type="button" data-cat="all" class="${state.category === "all" ? "active" : ""}">All</button>`,
     ];
     for (const c of state.categories) {
       chips.push(
@@ -182,6 +189,7 @@
         }">${escapeHtml(c)}</button>`
       );
     }
+    chips.push(`</div>`);
     els.catFilters.innerHTML = chips.join("");
     els.catFilters.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {

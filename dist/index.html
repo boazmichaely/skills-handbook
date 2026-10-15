@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>My Skills Handbook</title>
-  <link rel="stylesheet" href="styles.css?v=config-tab2" />
+  <link rel="stylesheet" href="styles.css?v=filters1" />
 </head>
 <body>
   <div id="app">
@@ -29,13 +29,21 @@
       <section id="skills-view" class="view">
         <div class="toolbar">
           <input id="search" type="search" placeholder="Search name, category, description, MCP…" autocomplete="off" />
-          <div class="filters origin" role="group" aria-label="Origin filter">
-            <button type="button" data-origin="all" class="active">All</button>
-            <button type="button" data-origin="personal">Personal</button>
-            <button type="button" data-origin="tailwind">Tailwind</button>
+          <div class="filter-group origin" role="group" aria-label="Origin filter">
+            <span class="filter-label" aria-hidden="true">
+              <svg class="filter-icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                <path fill="currentColor" d="M1.5 2.5h13l-5 5.5V13l-3 1.5V8L1.5 2.5z"/>
+              </svg>
+              Origin
+            </span>
+            <div class="filters origin">
+              <button type="button" data-origin="all" class="active">All</button>
+              <button type="button" data-origin="personal">Personal</button>
+              <button type="button" data-origin="tailwind">Tailwind</button>
+            </div>
           </div>
         </div>
-        <div id="cat-filters" class="filters cats" role="group" aria-label="Category filter"></div>
+        <div id="cat-filters" class="filter-group cats" role="group" aria-label="Category filter"></div>
         <div id="count" class="count"></div>
         <div class="table-wrap">
           <table id="skills-table" class="resizable">
@@ -110,6 +118,6 @@
   </div>
 
   <script src="vendor/marked.min.js"></script>
-  <script src="app.js?v=config-tab2"></script>
+  <script src="app.js?v=filters1"></script>
 </body>
 </html>
