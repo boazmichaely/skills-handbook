@@ -33,7 +33,7 @@ python3 generate.py
 | --- | --- |
 | **Cursor** | Skills + Rules from the Cursor paths in `handbook.json` |
 | **Claude** | Skills + Rules from the Claude paths (plus optional `~/.claude/CLAUDE.md`) |
-| **Config** | Local Tailwind / token settings (`tailwind.json`, status, cache, artifacts) |
+| **Tailwind config** | Local Tailwind / token settings (`tailwind.json`, status, cache, artifacts) |
 
 Under Cursor / Claude: **Skills** or **Rules**. Skills keep All / Personal / Tailwind origin filters.
 
