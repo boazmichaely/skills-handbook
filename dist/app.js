@@ -398,16 +398,43 @@
     }
   }
 
+  const PATH_HELP = {
+    "cursor.skills_dir": "Cursor skills tree shown in the Cursor tab.",
+    "cursor.rules_dir": "Cursor rules shown in the Cursor tab.",
+    "claude.skills_dir": "Claude skills tree shown in the Claude tab.",
+    "claude.rules_dir": "Claude rules shown in the Claude tab.",
+    "claude.claude_md_path": "Optional Claude user memory file, listed under Claude → Rules.",
+    personal_skills_dir:
+      "Your personal skills source. Skill ids here are tagged Personal in the All / Personal / Tailwind filter.",
+    tailwind_module_skills_dir:
+      "Tailwind skill pack installed by Lola (under .lola/modules/tailwind/skills). Skill ids here are tagged Tailwind. Not a separate UI filter - it feeds Personal / Tailwind.",
+    agents_skills_dir:
+      "Agent skills folder (gws-cli etc.). Skill ids here are also tagged Tailwind. Not a separate UI filter.",
+    tailwind_dir: "Tailwind config directory for the Tailwind config tab.",
+    jira_apikey_path: "Jira token file path (status only in Tailwind config).",
+    rh_offline_token_path: "RH offline token file path (status only).",
+    rh_offline_token_plain_path: "Plain-KEY token file path (status only).",
+  };
+
+  function fileHref(absPath) {
+    if (!absPath) return "";
+    const normalized = String(absPath).replace(/\\/g, "/");
+    if (/^[A-Za-z]:\//.test(normalized)) {
+      return `file:///${normalized}`;
+    }
+    return `file://${normalized.startsWith("/") ? "" : "/"}${normalized}`;
+  }
+
   function renderSettings() {
     if (!els.settingsBody) return;
     const s = state.settings;
     if (!s) {
-      els.settingsBody.innerHTML = "<p class=\"settings-note\">No settings data. Restart with ./serve.sh.</p>";
+      els.settingsBody.innerHTML =
+        '<p class="settings-note">No settings data. Restart with ./serve.sh.</p>';
       return;
     }
     const issues = s.issues || [];
     const paths = s.paths || [];
-    const counts = s.counts || {};
     const issuesHtml = issues.length
       ? `<section>
           <h3>Suspicious</h3>
@@ -427,6 +454,13 @@
           <p class="settings-note">No path or origin issues detected.</p>
         </section>`;
 
+    const handbookAbs = s.handbook_json_resolved || "";
+    const handbookLink = handbookAbs
+      ? `<p class="settings-note"><a href="${escapeHtml(
+          fileHref(handbookAbs)
+        )}">${escapeHtml(handbookAbs)}</a></p>`
+      : "";
+
     const pathRows = paths
       .map((p) => {
         const status = p.exists
@@ -434,14 +468,25 @@
           : '<span class="missing">missing</span>';
         const count =
           p.kind === "dir" && p.exists ? String(p.skill_count ?? 0) : "-";
+        const help = PATH_HELP[p.key] || "";
+        const resolved = p.resolved || "";
+        const resolvedCell = resolved
+          ? `<a class="mono" href="${escapeHtml(fileHref(resolved))}">${escapeHtml(
+              resolved
+            )}</a>`
+          : `<code class="mono">${escapeHtml(p.configured || "")}</code>`;
         return `<tr>
-          <td><code class="mono">${escapeHtml(p.key || "")}</code></td>
+          <td>
+            <code class="mono">${escapeHtml(p.key || "")}</code>
+            ${help ? `<span class="key-help">${escapeHtml(help)}</span>` : ""}
+            ${p.note ? `<span class="key-help">${escapeHtml(p.note)}</span>` : ""}
+          </td>
           <td>${status}</td>
           <td>${escapeHtml(count)}</td>
-          <td><code class="mono">${escapeHtml(p.resolved || p.configured || "")}</code>
-            ${p.note ? `<div class="settings-note">${escapeHtml(p.note)}</div>` : ""}
+          <td>
+            ${resolvedCell}
             ${
-              p.configured && p.configured !== p.resolved
+              p.configured && p.resolved && p.configured !== p.resolved
                 ? `<div class="settings-note">configured: <code>${escapeHtml(
                     p.configured
                   )}</code></div>`
@@ -452,40 +497,25 @@
       })
       .join("");
 
-    const countCards = [
-      ["Cursor skills", counts.cursor_skills],
-      ["Cursor personal / Tailwind", `${counts.cursor_personal ?? 0} / ${counts.cursor_tailwind ?? 0}`],
-      ["Claude skills", counts.claude_skills],
-      ["Claude personal / Tailwind", `${counts.claude_personal ?? 0} / ${counts.claude_tailwind ?? 0}`],
-      ["Lola module skills", counts.lola_module_skills],
-      ["Agents skills", counts.agents_skills],
-      ["Personal dir skills", counts.personal_dir_skills],
-      ["Config rows", counts.config_rows],
-    ]
-      .map(
-        ([label, value]) =>
-          `<div><span class="label">${escapeHtml(label)}</span><span class="value">${escapeHtml(
-            String(value ?? 0)
-          )}</span></div>`
-      )
-      .join("");
-
     els.settingsBody.innerHTML = `
       <section>
         <h3>handbook.json</h3>
         <p class="settings-note">
           Edit this file on disk, then restart <code>./serve.sh</code> and hard-refresh.
           ${s.using_example ? " Currently using the example defaults (no handbook.json yet)." : ""}
+          If the link does not open, copy the path into your editor.
         </p>
-        <p class="settings-note"><code>${escapeHtml(s.handbook_json_resolved || s.handbook_json || "")}</code></p>
+        ${handbookLink}
       </section>
       ${issuesHtml}
       <section>
-        <h3>Counts</h3>
-        <div class="settings-counts">${countCards}</div>
-      </section>
-      <section>
-        <h3>Paths</h3>
+        <h3>Paths from handbook.json</h3>
+        <p class="settings-note">
+          Personal / Tailwind is a filter on skills, not a separate folder tab.
+          It is computed from <code>personal_skills_dir</code>,
+          <code>tailwind_module_skills_dir</code> (Lola pack), and
+          <code>agents_skills_dir</code>.
+        </p>
         <div class="settings-table-wrap">
           <table class="settings-table">
             <thead>
