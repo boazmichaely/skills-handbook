@@ -318,6 +318,42 @@ body {
   letter-spacing: 0;
 }
 
+.settings-handbook-section {
+  margin: 0 0 0.35rem;
+}
+
+.settings-handbook-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.35rem;
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.edit-config-link {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.edit-config-link:hover {
+  text-decoration: underline;
+}
+
+.handbook-path-link {
+  color: var(--accent);
+  word-break: break-all;
+}
+
 .settings-edit-actions {
   display: flex;
   flex-wrap: wrap;
@@ -344,6 +380,12 @@ body {
 
 .settings-primary:hover {
   filter: brightness(0.95);
+}
+
+.settings-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
 }
 
 .settings-secondary {
@@ -433,9 +475,44 @@ body {
   color: var(--accent);
 }
 
-.config-group h3 {
-  margin: 0 0 0.55rem;
+.config-group {
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 0.1rem);
+  background: #fafaf9;
+  overflow: hidden;
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+
+.config-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+  background: #f0efed;
+}
+
+.config-group-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.config-group-header h3 {
+  margin: 0;
   font-size: 0.95rem;
+}
+
+.config-group-body {
+  padding: 0.75rem 0.85rem 0.85rem;
 }
 
 .config-field {
@@ -460,12 +537,18 @@ body {
   line-height: 1.35;
 }
 
+.config-field-error {
+  color: #9a3412;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .config-field input {
   margin-top: 0.15rem;
   padding: 0.45rem 0.6rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: #fafaf9;
+  background: #fff;
   color: var(--ink);
   font-family: var(--mono);
   font-size: 0.84rem;
@@ -474,6 +557,15 @@ body {
 .config-field input:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+.config-field input.is-invalid {
+  border-color: #c2410c;
+  background: #fff7ed;
+}
+
+.config-field input.is-invalid:focus {
+  outline-color: #c2410c;
 }
 
 .count {

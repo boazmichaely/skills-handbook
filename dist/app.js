@@ -66,11 +66,13 @@
           id: "cursor.skills_dir",
           label: "Skills folder",
           help: "Folder of Cursor skills shown under the Cursor tab.",
+          kind: "dir",
         },
         {
           id: "cursor.rules_dir",
           label: "Rules folder",
           help: "Folder of Cursor rules shown under the Cursor tab.",
+          kind: "dir",
         },
       ],
     },
@@ -81,16 +83,20 @@
           id: "claude.skills_dir",
           label: "Skills folder",
           help: "Folder of Claude skills shown under the Claude tab.",
+          kind: "dir",
         },
         {
           id: "claude.rules_dir",
-          label: "Rules folder",
-          help: "Folder of Claude rules shown under the Claude tab.",
+          label: "Rules folder (optional)",
+          help: "Folder of Claude rules shown under the Claude tab. Leave empty if unused.",
+          kind: "dir",
+          optional: true,
         },
         {
           id: "claude.claude_md_path",
           label: "Memory file (optional)",
           help: "Optional Claude memory file. Leave empty to skip.",
+          kind: "file",
           optional: true,
         },
       ],
@@ -102,18 +108,21 @@
           id: "personal_skills_dir",
           label: "Personal skills folder",
           help: "Your skills folder. Names here count as Personal. Leave empty if none.",
+          kind: "dir",
           optional: true,
         },
         {
           id: "tailwind_module_skills_dir",
           label: "Full Tailwind skills pack",
           help: "Full Tailwind skills pack on disk. Leave empty to use the default under your Cursor skills folder (…/.lola/modules/tailwind/skills).",
+          kind: "dir",
           optional: true,
         },
         {
           id: "agents_skills_dir",
           label: "Add-on skills folder",
           help: "Add-on skills (for example gws). Names here also count as Tailwind.",
+          kind: "dir",
           optional: true,
         },
       ],
@@ -125,6 +134,7 @@
           id: "tailwind_dir",
           label: "Tailwind config folder",
           help: "Folder for the Tailwind config tab (tailwind.json and related files).",
+          kind: "dir",
         },
       ],
     },
@@ -135,23 +145,35 @@
           id: "jira_apikey_path",
           label: "Jira token file",
           help: "Path to the Jira token file. Status only - do not paste the token here.",
+          kind: "file",
           optional: true,
         },
         {
           id: "rh_offline_token_path",
           label: "RH offline token file",
           help: "Path to the Red Hat offline token file. Status only - do not paste the token here.",
+          kind: "file",
           optional: true,
         },
         {
           id: "rh_offline_token_plain_path",
           label: "RH plain-KEY token file",
           help: "Path to a plain-KEY copy if you use one. Status only.",
+          kind: "file",
           optional: true,
         },
       ],
     },
   ];
+
+  function fieldById(id) {
+    for (const group of CONFIG_GROUPS) {
+      for (const field of group.fields) {
+        if (field.id === id) return field;
+      }
+    }
+    return null;
+  }
 
   const CHEVRON_SVG =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="9,5 19,12 9,19" fill="currentColor"/></svg>';
@@ -555,11 +577,15 @@
         </section>`;
 
     const handbookAbs = s.handbook_json_resolved || "";
-    const handbookLink = handbookAbs
-      ? `<p class="settings-note"><a href="${escapeHtml(
-          fileHref(handbookAbs)
-        )}">${escapeHtml(handbookAbs)}</a></p>`
-      : "";
+    const handbookLine = handbookAbs
+      ? `<p class="settings-handbook-line">
+          <button type="button" id="open-config-editor" class="edit-config-link">[edit configuration]</button><a class="mono handbook-path-link" href="${escapeHtml(
+            fileHref(handbookAbs)
+          )}">${escapeHtml(handbookAbs)}</a>
+        </p>`
+      : `<p class="settings-handbook-line">
+          <button type="button" id="open-config-editor" class="edit-config-link">[edit configuration]</button>
+        </p>`;
 
     const pathRows = paths
       .map((p) => {
@@ -592,18 +618,8 @@
       .join("");
 
     els.settingsBody.innerHTML = `
-      <section>
-        <h3>handbook.json</h3>
-        <p class="settings-note">
-          ${s.using_example ? "Using example defaults until you save handbook.json. " : ""}
-          Review findings below. Use <strong>Edit configuration</strong> to change paths in a form
-          (paths only - never paste secrets).
-          If the link does not open, copy the path into your editor.
-        </p>
-        ${handbookLink}
-        <div class="settings-edit-actions">
-          <button type="button" id="open-config-editor" class="settings-primary">Edit configuration</button>
-        </div>
+      <section class="settings-handbook-section">
+        ${handbookLine}
       </section>
       ${issuesHtml}
       <section class="settings-paths-section">
@@ -673,24 +689,35 @@
 
   function renderConfigForm(values) {
     if (!els.editModalBody) return;
-    const html = CONFIG_GROUPS.map((group) => {
+    const html = CONFIG_GROUPS.map((group, index) => {
       const fields = group.fields
         .map((field) => {
           const val = values[field.id] == null ? "" : String(values[field.id]);
           return `<label class="config-field">
             <span class="config-field-label">${escapeHtml(field.label)}</span>
             <span class="config-field-help">${escapeHtml(field.help)}</span>
-            <input type="text" data-config-id="${escapeHtml(field.id)}" value="${escapeHtml(
+            <input type="text" data-config-id="${escapeHtml(field.id)}" data-kind="${escapeHtml(
+              field.kind || "dir"
+            )}" data-optional="${field.optional ? "1" : "0"}" value="${escapeHtml(
               val
             )}" spellcheck="false" autocomplete="off" ${
               field.optional ? 'placeholder="(optional)"' : ""
             } />
+            <span class="config-field-error" data-error-for="${escapeHtml(field.id)}" hidden></span>
           </label>`;
         })
         .join("");
-      return `<section class="config-group"><h3>${escapeHtml(group.title)}</h3>${fields}</section>`;
+      return `<section class="config-group" data-group-index="${index + 1}">
+        <header class="config-group-header">
+          <span class="config-group-index" aria-hidden="true">${index + 1}</span>
+          <h3>${escapeHtml(group.title)}</h3>
+        </header>
+        <div class="config-group-body">${fields}</div>
+      </section>`;
     }).join("");
     els.editModalBody.innerHTML = html;
+    bindConfigFieldValidation();
+    updateSaveEnabled();
   }
 
   function collectConfigForm() {
@@ -702,15 +729,88 @@
     return values;
   }
 
-  function validateConfigValues(values) {
+  function setFieldError(input, message) {
+    const id = input.dataset.configId;
+    const errEl =
+      (els.editModal &&
+        els.editModal.querySelector(`.config-field-error[data-error-for="${id}"]`)) ||
+      null;
+    const bad = Boolean(message);
+    input.classList.toggle("is-invalid", bad);
+    input.setAttribute("aria-invalid", bad ? "true" : "false");
+    if (errEl) {
+      errEl.textContent = message || "";
+      errEl.hidden = !bad;
+    }
+  }
+
+  function updateSaveEnabled() {
+    if (!els.editSave) return;
+    const invalid =
+      els.editModal && els.editModal.querySelector("input[data-config-id].is-invalid");
+    els.editSave.disabled = Boolean(invalid);
+  }
+
+  async function checkPathOnServer(field, value) {
+    if (looksLikeSecret(value)) {
+      return `${field.label}: enter a filesystem path only, not a secret value.`;
+    }
+    try {
+      const r = await fetch("/api/check-path", {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify({
+          path: value,
+          kind: field.kind || "dir",
+          optional: Boolean(field.optional),
+          label: field.label,
+        }),
+      });
+      const data = await r.json();
+      if (data.ok) return "";
+      return data.error || `${field.label}: invalid path.`;
+    } catch {
+      return "Could not check path. Start the app with ./serve.sh.";
+    }
+  }
+
+  async function validateConfigInput(input) {
+    const field = fieldById(input.dataset.configId);
+    if (!field) return true;
+    const value = input.value.trim();
+    const err = await checkPathOnServer(field, value);
+    setFieldError(input, err);
+    updateSaveEnabled();
+    return !err;
+  }
+
+  function bindConfigFieldValidation() {
+    if (!els.editModal) return;
+    els.editModal.querySelectorAll("input[data-config-id]").forEach((input) => {
+      input.addEventListener("blur", () => {
+        validateConfigInput(input);
+      });
+      input.addEventListener("input", () => {
+        if (input.classList.contains("is-invalid")) {
+          setFieldError(input, "");
+          updateSaveEnabled();
+        }
+      });
+    });
+  }
+
+  async function validateConfigValues(values) {
     for (const group of CONFIG_GROUPS) {
       for (const field of group.fields) {
         const val = values[field.id] == null ? "" : String(values[field.id]);
-        if (!field.optional && !val) {
-          return `${field.label} is required.`;
-        }
-        if (looksLikeSecret(val)) {
-          return `${field.label}: enter a filesystem path only, not a secret value.`;
+        const err = await checkPathOnServer(field, val);
+        if (err) {
+          const input =
+            els.editModal &&
+            els.editModal.querySelector(`input[data-config-id="${field.id}"]`);
+          if (input) setFieldError(input, err);
+          updateSaveEnabled();
+          return err;
         }
       }
     }
@@ -791,7 +891,8 @@
 
   async function saveConfigForm() {
     const values = collectConfigForm();
-    const verr = validateConfigValues(values);
+    setEditStatus("Checking paths…");
+    const verr = await validateConfigValues(values);
     if (verr) {
       setEditStatus(verr, "error");
       return;

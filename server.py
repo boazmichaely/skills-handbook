@@ -51,6 +51,40 @@ def _regenerate() -> tuple[bool, str]:
     return True, (proc.stdout or "").strip()
 
 
+def _expand_path(value: str) -> Path:
+    return Path(value).expanduser()
+
+
+def _check_path_value(
+    label: str,
+    value: object,
+    *,
+    kind: str,
+    optional: bool,
+) -> str | None:
+    if value is None:
+        value = ""
+    if not isinstance(value, str):
+        return f"{label} must be a string path."
+    text = value.strip()
+    if not text:
+        if optional:
+            return None
+        return f"{label} is required."
+    if _SECRETISH.search(text) or (
+        len(text) > 200 and "/" not in text and "\\" not in text and not text.startswith("~")
+    ):
+        return f"{label} looks like a secret value. Put a filesystem path only."
+    resolved = _expand_path(text)
+    if kind == "file":
+        if not resolved.is_file():
+            return f"{label}: file does not exist ({resolved})."
+    else:
+        if not resolved.is_dir():
+            return f"{label}: folder does not exist ({resolved})."
+    return None
+
+
 def _validate_config(data: object) -> str | None:
     if not isinstance(data, dict):
         return "handbook.json must be a JSON object."
@@ -61,38 +95,64 @@ def _validate_config(data: object) -> str | None:
     if claude is not None and not isinstance(claude, dict):
         return '"claude" must be an object.'
 
-    def check_str(label: str, value: object) -> str | None:
-        if value is None:
-            return None
-        if not isinstance(value, str):
-            return f"{label} must be a string path."
-        if _SECRETISH.search(value) or (len(value) > 200 and "/" not in value and "\\" not in value and not value.startswith("~")):
-            return f"{label} looks like a secret value. Put a filesystem path only."
-        return None
-
-    for key in (
-        "personal_skills_dir",
-        "tailwind_dir",
-        "tailwind_module_skills_dir",
-        "agents_skills_dir",
-        "jira_apikey_path",
-        "rh_offline_token_path",
-        "rh_offline_token_plain_path",
-    ):
-        err = check_str(key, data.get(key))
+    checks: list[tuple[str, object, str, bool]] = [
+        ("personal_skills_dir", data.get("personal_skills_dir"), "dir", True),
+        ("tailwind_dir", data.get("tailwind_dir"), "dir", False),
+        ("tailwind_module_skills_dir", data.get("tailwind_module_skills_dir"), "dir", True),
+        ("agents_skills_dir", data.get("agents_skills_dir"), "dir", True),
+        ("jira_apikey_path", data.get("jira_apikey_path"), "file", True),
+        ("rh_offline_token_path", data.get("rh_offline_token_path"), "file", True),
+        ("rh_offline_token_plain_path", data.get("rh_offline_token_plain_path"), "file", True),
+    ]
+    if isinstance(cursor, dict):
+        checks.extend(
+            [
+                ("cursor.skills_dir", cursor.get("skills_dir"), "dir", False),
+                ("cursor.rules_dir", cursor.get("rules_dir"), "dir", False),
+            ]
+        )
+    if isinstance(claude, dict):
+        checks.extend(
+            [
+                ("claude.skills_dir", claude.get("skills_dir"), "dir", False),
+                ("claude.rules_dir", claude.get("rules_dir"), "dir", True),
+                ("claude.claude_md_path", claude.get("claude_md_path"), "file", True),
+            ]
+        )
+    for label, value, kind, optional in checks:
+        err = _check_path_value(label, value, kind=kind, optional=optional)
         if err:
             return err
-    if isinstance(cursor, dict):
-        for key in ("skills_dir", "rules_dir"):
-            err = check_str(f"cursor.{key}", cursor.get(key))
-            if err:
-                return err
-    if isinstance(claude, dict):
-        for key in ("skills_dir", "rules_dir", "claude_md_path"):
-            err = check_str(f"claude.{key}", claude.get(key))
-            if err:
-                return err
     return None
+
+
+def _check_path_request(payload: object) -> dict:
+    if not isinstance(payload, dict):
+        return {"ok": False, "error": "Body must be a JSON object."}
+    raw = payload.get("path")
+    kind = str(payload.get("kind") or "dir").lower()
+    optional = bool(payload.get("optional"))
+    label = str(payload.get("label") or "Path")
+    if kind not in ("dir", "file"):
+        return {"ok": False, "error": 'kind must be "dir" or "file".'}
+    if raw is not None and not isinstance(raw, str):
+        return {"ok": False, "error": "path must be a string."}
+    text = "" if raw is None else raw.strip()
+    err = _check_path_value(label, text, kind=kind, optional=optional)
+    resolved = str(_expand_path(text)) if text else ""
+    if err:
+        return {
+            "ok": False,
+            "exists": False,
+            "resolved": resolved,
+            "error": err,
+        }
+    return {
+        "ok": True,
+        "exists": bool(text),
+        "resolved": resolved,
+        "error": None,
+    }
 
 
 class HandbookHandler(SimpleHTTPRequestHandler):
@@ -137,7 +197,7 @@ class HandbookHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
-        if path != "/api/handbook-config":
+        if path not in ("/api/handbook-config", "/api/check-path"):
             self.send_error(HTTPStatus.NOT_FOUND, "Not found")
             return
 
@@ -152,12 +212,16 @@ class HandbookHandler(SimpleHTTPRequestHandler):
             return
 
         try:
-            data = json.loads(text)
+            data = json.loads(text) if text.strip() else {}
         except json.JSONDecodeError as exc:
             self._send_json(
                 HTTPStatus.BAD_REQUEST,
                 {"ok": False, "error": f"Invalid JSON: {exc}"},
             )
+            return
+
+        if path == "/api/check-path":
+            self._send_json(HTTPStatus.OK, _check_path_request(data))
             return
 
         err = _validate_config(data)
