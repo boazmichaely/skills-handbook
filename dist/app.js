@@ -396,30 +396,21 @@
   }
 
   const PATH_HELP = {
-    "cursor.skills_dir":
-      "Folder of skills shown under the Cursor tab.",
-    "cursor.rules_dir":
-      "Folder of rules shown under the Cursor tab.",
-    "claude.skills_dir":
-      "Folder of skills shown under the Claude tab.",
-    "claude.rules_dir":
-      "Folder of rules shown under the Claude tab.",
-    "claude.claude_md_path":
-      "Optional Claude memory file. If present, it appears under Claude → Rules.",
+    "cursor.skills_dir": "Skills listed under the Cursor tab.",
+    "cursor.rules_dir": "Rules listed under the Cursor tab.",
+    "claude.skills_dir": "Skills listed under the Claude tab.",
+    "claude.rules_dir": "Rules listed under the Claude tab.",
+    "claude.claude_md_path": "Optional Claude memory file under Claude → Rules.",
     personal_skills_dir:
-      "Your own skills repo or folder. Skills found here are marked Personal in the All / Personal / Tailwind filter.",
+      "Your skills folder. Names here count as Personal in All / Personal / Tailwind.",
     tailwind_module_skills_dir:
-      "Copy of the full Tailwind skills pack that the Tailwind installer leaves on disk (usually inside .lola/modules/tailwind/skills under your Cursor skills folder). The number in Skills is how many skill folders are in this path. Those names are marked Tailwind in the filter. There is no separate Lola tab or filter.",
+      "Full Tailwind skills pack on disk (usually …/.lola/modules/tailwind/skills). Names here count as Tailwind.",
     agents_skills_dir:
-      "Extra skills folder used by some Tailwind add-ons (for example Google Workspace / gws). The Skills number is how many are in this path. Those names are also marked Tailwind in the filter.",
-    tailwind_dir:
-      "Folder used by the Tailwind config tab (tailwind.json and related files).",
-    jira_apikey_path:
-      "Path to your Jira token file. Only status is shown in Tailwind config, not the secret.",
-    rh_offline_token_path:
-      "Path to your Red Hat offline token file. Only status is shown, not the secret.",
-    rh_offline_token_plain_path:
-      "Path to a plain-KEY copy of that token if you use one. Only status is shown.",
+      "Add-on skills folder (for example gws). Names here also count as Tailwind.",
+    tailwind_dir: "Folder for the Tailwind config tab.",
+    jira_apikey_path: "Jira token file (status only, not the secret).",
+    rh_offline_token_path: "Red Hat offline token file (status only).",
+    rh_offline_token_plain_path: "Plain-KEY token file if you use one (status only).",
   };
 
   function fileHref(absPath) {
@@ -476,29 +467,23 @@
           p.kind === "dir" && p.exists ? String(p.skill_count ?? 0) : "-";
         const help = PATH_HELP[p.key] || "";
         const resolved = p.resolved || "";
+        const configured =
+          p.configured && p.configured !== p.resolved ? p.configured : "";
         const resolvedCell = resolved
-          ? `<a class="mono" href="${escapeHtml(fileHref(resolved))}">${escapeHtml(
-              resolved
-            )}</a>`
+          ? `<a class="mono" href="${escapeHtml(fileHref(resolved))}"${
+              configured
+                ? ` title="In handbook.json: ${escapeHtml(configured)}"`
+                : ""
+            }>${escapeHtml(resolved)}</a>`
           : `<code class="mono">${escapeHtml(p.configured || "")}</code>`;
         return `<tr>
           <td>
             <code class="mono">${escapeHtml(p.key || "")}</code>
             ${help ? `<span class="key-help">${escapeHtml(help)}</span>` : ""}
-            ${p.note ? `<span class="key-help">${escapeHtml(p.note)}</span>` : ""}
           </td>
-          <td>${status}</td>
-          <td>${escapeHtml(count)}</td>
-          <td>
-            ${resolvedCell}
-            ${
-              p.configured && p.resolved && p.configured !== p.resolved
-                ? `<div class="settings-note">configured: <code>${escapeHtml(
-                    p.configured
-                  )}</code></div>`
-                : ""
-            }
-          </td>
+          <td class="col-status">${status}</td>
+          <td class="col-count">${escapeHtml(count)}</td>
+          <td>${resolvedCell}</td>
         </tr>`;
       })
       .join("");
@@ -507,31 +492,33 @@
       <section>
         <h3>handbook.json</h3>
         <p class="settings-note">
-          Edit this file on disk, then restart <code>./serve.sh</code> and hard-refresh.
-          ${s.using_example ? " Currently using the example defaults (no handbook.json yet)." : ""}
+          Edit this file, restart <code>./serve.sh</code>, then hard-refresh.
+          ${s.using_example ? " Using example defaults until handbook.json exists." : ""}
           If the link does not open, copy the path into your editor.
         </p>
         ${handbookLink}
       </section>
       ${issuesHtml}
-      <section>
+      <section class="settings-paths-section">
         <h3>Paths from handbook.json</h3>
         <p class="settings-note">
-          The All / Personal / Tailwind control filters the skills list.
-          It uses the three folders below:
-          <code>personal_skills_dir</code> (Personal),
-          <code>tailwind_module_skills_dir</code> (full Tailwind pack on disk),
-          and <code>agents_skills_dir</code> (add-on skills such as gws).
-          The Skills column is the number of skill folders found at that path.
+          <strong>Skills in folder</strong> is how many skill folders exist at that path.
+          Those names drive All / Personal / Tailwind.
         </p>
         <div class="settings-table-wrap">
-          <table class="settings-table">
+          <table class="settings-table resizable">
+            <colgroup>
+              <col data-col="settings-key" style="width: 28%" />
+              <col data-col="settings-status" style="width: 5.5rem" />
+              <col data-col="settings-count" style="width: 6.5rem" />
+              <col data-col="settings-path" style="width: auto" />
+            </colgroup>
             <thead>
               <tr>
-                <th>Key</th>
-                <th>Status</th>
-                <th>Skills in folder</th>
-                <th>Resolved path</th>
+                <th data-col="settings-key">Key<span class="col-resizer" data-resize="settings-key"></span></th>
+                <th data-col="settings-status">Status<span class="col-resizer" data-resize="settings-status"></span></th>
+                <th data-col="settings-count">Skills in folder<span class="col-resizer" data-resize="settings-count"></span></th>
+                <th data-col="settings-path">Resolved path</th>
               </tr>
             </thead>
             <tbody>${pathRows}</tbody>
@@ -539,6 +526,46 @@
         </div>
       </section>
     `;
+    applyColWidths();
+    initSettingsColumnResize();
+  }
+
+  function initSettingsColumnResize() {
+    if (!els.settingsPanel) return;
+    els.settingsPanel.querySelectorAll(".col-resizer").forEach((handle) => {
+      if (handle.dataset.bound === "1") return;
+      handle.dataset.bound = "1";
+      handle.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = handle.dataset.resize;
+        const col = els.settingsPanel.querySelector(`col[data-col="${key}"]`);
+        if (!col) return;
+        const startX = e.clientX;
+        const startW = col.getBoundingClientRect().width;
+        handle.classList.add("dragging");
+        document.body.classList.add("col-resizing");
+        handle.setPointerCapture(e.pointerId);
+
+        const onMove = (ev) => {
+          const dx = ev.clientX - startX;
+          const min = key === "settings-status" ? 72 : 80;
+          col.style.width = `${Math.max(min, startW + dx)}px`;
+        };
+        const onUp = (ev) => {
+          handle.releasePointerCapture(ev.pointerId);
+          handle.classList.remove("dragging");
+          document.body.classList.remove("col-resizing");
+          handle.removeEventListener("pointermove", onMove);
+          handle.removeEventListener("pointerup", onUp);
+          const map = loadColWidths();
+          map[key] = col.style.width;
+          saveColWidths(map);
+        };
+        handle.addEventListener("pointermove", onMove);
+        handle.addEventListener("pointerup", onUp);
+      });
+    });
   }
 
   function openSettings() {

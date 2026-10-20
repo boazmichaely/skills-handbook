@@ -231,7 +231,6 @@ def build_settings(
     agents_cfg = str(cfg.get("agents_skills_dir") or "").strip()
     lola_auto = CURSOR_SKILLS_DIR / ".lola" / "modules" / "tailwind" / "skills"
     lola_path = TW_MODULE_SKILLS_DIR if TW_MODULE_SKILLS_DIR is not None else lola_auto
-    lola_note = "auto" if not module_cfg else "explicit"
 
     paths = [
         _path_row(
@@ -268,9 +267,8 @@ def build_settings(
         ),
         _path_row(
             "tailwind_module_skills_dir",
-            module_cfg or f"(auto) {_display_path(lola_auto)}",
+            module_cfg or _display_path(lola_auto),
             lola_path,
-            note=lola_note,
         ),
         _path_row(
             "agents_skills_dir",
