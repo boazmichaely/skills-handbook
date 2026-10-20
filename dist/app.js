@@ -11,12 +11,12 @@
     generatedAt: "",
     runtime: "cursor",
     section: "skills",
-    origin: "all",
-    category: "all",
+    origins: [],
+    selectedCategories: [],
     query: "",
     rulesQuery: "",
     configQuery: "",
-    configSource: "all",
+    configSourcesSelected: [],
     openSkillId: null,
     showFullSkill: false,
     openRuleId: null,
@@ -266,12 +266,23 @@
     });
   }
 
+  function toggleFilterValue(list, value) {
+    const i = list.indexOf(value);
+    if (i >= 0) list.splice(i, 1);
+    else list.push(value);
+  }
+
   function visibleSkills() {
     const q = state.query.trim().toLowerCase();
     const skills = activeBundle().skills || [];
+    const origins = state.origins;
+    const cats = state.selectedCategories;
     return skills.filter((sk) => {
-      if (state.origin !== "all" && sk.origin !== state.origin) return false;
-      if (state.category !== "all" && !(sk.categories || []).includes(state.category)) return false;
+      if (origins.length && !origins.includes(sk.origin)) return false;
+      if (cats.length) {
+        const skCats = sk.categories || [];
+        if (!cats.some((c) => skCats.includes(c))) return false;
+      }
       if (!q) return true;
       return (sk.search_blob || "").includes(q);
     });
@@ -298,27 +309,29 @@
 
   function visibleConfig() {
     const q = state.configQuery.trim().toLowerCase();
+    const sources = state.configSourcesSelected;
     return state.config.filter((row) => {
-      if (state.configSource !== "all" && row.source !== state.configSource) return false;
+      if (sources.length && !sources.includes(row.source || "other")) return false;
       if (!q) return true;
       return (row.search_blob || "").includes(q);
     });
   }
 
   function renderCatFilters() {
+    const selected = state.selectedCategories;
     const chips = [
-      `<span class="filter-label" title="Filter by category">
+      `<span class="filter-label" title="Filter by category (multi-select)">
         <svg class="filter-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
           <path fill="currentColor" d="M1.5 2.5h13l-5 5.5V13l-3 1.5V8L1.5 2.5z"/>
         </svg>
       </span>`,
       `<div class="filters cats">`,
-      `<button type="button" data-cat="all" class="${state.category === "all" ? "active" : ""}">All categories</button>`,
+      `<button type="button" data-cat="all" class="${selected.length === 0 ? "active" : ""}">All categories</button>`,
     ];
     for (const c of state.categories) {
       chips.push(
         `<button type="button" data-cat="${escapeHtml(c)}" class="${
-          state.category === c ? "active" : ""
+          selected.includes(c) ? "active" : ""
         }">${escapeHtml(c)}</button>`
       );
     }
@@ -327,7 +340,8 @@
     els.catFilters.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const next = btn.dataset.cat;
-        state.category = next === state.category && next !== "all" ? "all" : next;
+        if (next === "all") state.selectedCategories = [];
+        else toggleFilterValue(state.selectedCategories, next);
         state.openSkillId = null;
         state.showFullSkill = false;
         renderCatFilters();
@@ -442,15 +456,16 @@
   function renderConfigSourceFilters() {
     if (!els.configSourceFilters) return;
     const sources = configSources();
+    const selected = state.configSourcesSelected;
     const chips = [
       `<button type="button" data-config-source="all" class="${
-        state.configSource === "all" ? "active" : ""
+        selected.length === 0 ? "active" : ""
       }">All sources</button>`,
     ];
     for (const s of sources) {
       chips.push(
         `<button type="button" data-config-source="${escapeHtml(s)}" class="${
-          state.configSource === s ? "active" : ""
+          selected.includes(s) ? "active" : ""
         }">${escapeHtml(s)}</button>`
       );
     }
@@ -458,8 +473,8 @@
     els.configSourceFilters.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const next = btn.dataset.configSource;
-        state.configSource =
-          next === state.configSource && next !== "all" ? "all" : next;
+        if (next === "all") state.configSourcesSelected = [];
+        else toggleFilterValue(state.configSourcesSelected, next);
         state.openConfigId = null;
         renderConfigSourceFilters();
         renderConfigTable();
@@ -1198,18 +1213,27 @@
     });
   }
 
+  function syncOriginFilterButtons() {
+    const selected = state.origins;
+    document.querySelectorAll(".filter-links.origin button[data-origin]").forEach((b) => {
+      const v = b.dataset.origin;
+      const on = v === "all" ? selected.length === 0 : selected.includes(v);
+      b.classList.toggle("active", on);
+    });
+  }
+
   document.querySelectorAll(".filter-links.origin button[data-origin]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const next = btn.dataset.origin;
-      state.origin = next === state.origin && next !== "all" ? "all" : next;
-      document.querySelectorAll(".filter-links.origin button[data-origin]").forEach((b) => {
-        b.classList.toggle("active", b.dataset.origin === state.origin);
-      });
+      if (next === "all") state.origins = [];
+      else toggleFilterValue(state.origins, next);
+      syncOriginFilterButtons();
       state.openSkillId = null;
       state.showFullSkill = false;
       renderSkillsTable();
     });
   });
+  syncOriginFilterButtons();
 
   document.querySelectorAll(".tabs button[data-runtime]").forEach((btn) => {
     btn.addEventListener("click", () => setRuntime(btn.dataset.runtime));
