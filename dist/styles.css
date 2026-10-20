@@ -474,10 +474,11 @@ body {
 }
 
 .config-group h3 {
-  margin: 0 0 0.65rem;
+  margin: 0 0 0.75rem;
   padding: 0;
-  font-size: 0.95rem;
+  font-size: 1.35rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--ink);
 }
 

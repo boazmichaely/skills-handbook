@@ -764,11 +764,20 @@
           label: field.label,
         }),
       });
-      const data = await r.json();
+      const text = await r.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
+      if (!data || typeof data !== "object") {
+        return "Path check unavailable. Stop the old server and run ./serve.sh again from ~/Projects/skills-handbook.";
+      }
       if (data.ok) return "";
       return data.error || `${field.label}: invalid path.`;
     } catch {
-      return "Could not check path. Start the app with ./serve.sh.";
+      return "Path check unavailable. Stop the old server and run ./serve.sh again from ~/Projects/skills-handbook.";
     }
   }
 
