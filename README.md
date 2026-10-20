@@ -26,14 +26,24 @@ PORT=9000 ./serve.sh
 
 Then open http://127.0.0.1:9000 instead.
 
+## Day to day
+
+- `./serve.sh` rebuilds the catalog from disk, then serves the UI (localhost only).
+- After skill or rule changes on disk: restart `./serve.sh`, then hard-refresh.
+- **Settings** (gear): path findings and **# skills** counts. **Edit configuration** edits `handbook.json` in a form. Gray fields are unchanged defaults (the app does not check that those paths exist until you edit them). Paths only - never paste secrets.
+- Source and category filters are multi-select; **All** clears that group.
+- `dist/skills.json` is generated locally and gitignored. Do not commit it.
+
 ## Usage
 
 ![My Skills Handbook UI](docs/ui-overview.jpg)
 
+### Navigation
 The top **tabs** switch between Cursor, Claude, and Tailwind config. On Cursor and Claude, the **section tabs** below choose Skills or Rules.
 
 **Live search** narrows the list as you type. Next to it (and on a second row for categories), **filters** are multi-select chips: click to include a source or category, click again to clear it, or choose **All** to reset that group.
 
+### Exploring Skills
 Click a table row to expand it. You get a short detail panel: the path on disk, when to use the skill, and detected MCP / auth / tools.
 
 ![Expanded skill detail](docs/skill-expanded.jpg)
@@ -44,6 +54,7 @@ From there, **View full SKILL.md** opens the underlying skill file in the same p
 
 Rules and Tailwind config rows expand the same way (config shows path and value detail instead of a SKILL.md).
 
+### Settings
 **Settings** (gear, top right) is where you diagnose paths. Open it when a tab looks empty or Personal / Tailwind tagging looks wrong.
 
 ![Settings control](docs/settings-entry.jpg)
@@ -69,16 +80,8 @@ git pull
 
 Hard-refresh the browser (Cmd+Shift+R).
 
-Your local `handbook.json` is not in git and is not overwritten by `git pull`.
-After an upgrade, skim `handbook.example.json` once in case new keys were added; copy any new keys you need into your `handbook.json` (or set them in **Edit configuration**).
+`git pull` does not throw away your local `handbook.json` edits. After an upgrade, skim `handbook.example.json` once in case new keys were added; copy any new keys you need into your `handbook.json` (or set them in **Edit configuration**).
 
-## Day to day
-
-- `./serve.sh` rebuilds the catalog from disk, then serves the UI (localhost only).
-- After skill or rule changes on disk: restart `./serve.sh`, then hard-refresh.
-- **Settings** (gear): path findings and **# skills** counts. **Edit configuration** edits `handbook.json` in a form. Gray fields are unchanged defaults (the app does not check that those paths exist until you edit them). Paths only - never paste secrets.
-- Source and category filters are multi-select; **All** clears that group.
-- `dist/skills.json` is generated locally and gitignored. Do not commit it.
 
 ## `handbook.json`
 
