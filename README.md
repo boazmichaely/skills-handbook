@@ -11,8 +11,7 @@ Python 3.10+ (stdlib only).
 ```bash
 git clone https://github.com/boazmichaely/skills-handbook.git
 cd skills-handbook
-# handbook.json ships with the same defaults as handbook.example.json
-# edit it for this machine, or use Settings → Edit configuration after start
+# edit handbook.json for this machine, or use Settings → Edit configuration after start
 ./serve.sh
 ```
 
@@ -82,7 +81,7 @@ Hard-refresh the browser (Cmd+Shift+R).
 
 This file tells the handbook where to look on **your** computer. It is a list of folders and token-file paths - not the secrets themselves. If a path is wrong, a tab can look empty, filters can tag skills incorrectly, or Settings will show **missing**.
 
-The repo includes `handbook.json` with the same defaults as `handbook.example.json`. Edit `handbook.json` in a text editor, or use **Settings → Edit configuration** in the UI. If you delete `handbook.json`, copy it back from the example. Use `~` for your home directory; it expands when the handbook starts.
+Edit `handbook.json` in a text editor, or use **Settings → Edit configuration** in the UI. The repo also includes `handbook.example.json` in case you need to recover the defaults (`cp handbook.example.json handbook.json`). Use `~` for your home directory; it expands when the handbook starts.
 
 | Key | What it points at |
 | --- | --- |
