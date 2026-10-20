@@ -64,7 +64,16 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.45rem;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.brand-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
   min-width: 0;
 }
 
@@ -78,18 +87,17 @@ body {
 
 .header-tools {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.35rem;
+  align-items: center;
+  justify-content: flex-end;
   margin-bottom: 0.35rem;
+  flex: 0 0 auto;
 }
 
 .meta {
   margin: 0;
   color: var(--muted);
-  font-size: 0.82rem;
-  text-align: right;
-  max-width: 28rem;
+  font-size: 0.78rem;
+  text-align: left;
   line-height: 1.35;
 }
 
@@ -1120,11 +1128,6 @@ body.col-resizing {
   .filter-links.origin { width: 100%; }
   table.resizable { min-width: 100%; font-size: 0.9rem; }
   .name-cell .id { display: none; }
-  .meta {
-    width: 100%;
-    text-align: left;
-    margin: 0.15rem 0 0.45rem;
-  }
 }
 
 @media (min-width: 75rem) {
