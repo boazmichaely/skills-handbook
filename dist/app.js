@@ -509,9 +509,17 @@
       rows.join("") || `<tr><td colspan="3">No matching config rows.</td></tr>`;
   }
 
+  function formatRefreshedAt(iso) {
+    const m = String(iso || "").match(
+      /^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})/
+    );
+    if (!m) return String(iso || "");
+    return `${m[1]} ${m[2]}:${m[3]}`;
+  }
+
   function updateMeta() {
     els.meta.textContent = state.generatedAt
-      ? `Last refreshed ${state.generatedAt}`
+      ? `Last refreshed ${formatRefreshedAt(state.generatedAt)}`
       : "";
     const issueCount = (state.settings && state.settings.issues && state.settings.issues.length) || 0;
     if (els.settingsBtn) {
