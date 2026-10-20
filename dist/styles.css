@@ -318,39 +318,11 @@ body {
   letter-spacing: 0;
 }
 
-.settings-edit {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  margin-top: 0.65rem;
-}
-
-.handbook-editor {
-  width: 100%;
-  min-height: 14rem;
-  max-height: 28rem;
-  resize: vertical;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: #fafaf9;
-  color: var(--ink);
-  font-family: var(--mono);
-  font-size: 0.84rem;
-  line-height: 1.45;
-}
-
-.handbook-editor:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
 .settings-edit-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  margin-top: 0.65rem;
 }
 
 .settings-primary,
@@ -384,12 +356,124 @@ body {
   border-color: #a8a29e;
 }
 
-#handbook-edit-status.is-error {
+.edit-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(28, 25, 23, 0.45);
+}
+
+.edit-modal {
+  position: fixed;
+  z-index: 61;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(40rem, calc(100vw - 2rem));
+  max-height: min(90vh, 52rem);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 0.15rem);
+  box-shadow: 0 18px 48px rgba(28, 25, 23, 0.22);
+}
+
+.edit-modal.hidden,
+.edit-backdrop.hidden {
+  display: none;
+}
+
+.edit-modal-header,
+.edit-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.edit-modal-footer {
+  border-bottom: none;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.edit-modal-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.edit-modal-body {
+  overflow: auto;
+  padding: 0.85rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.edit-modal-footer .settings-edit-actions {
+  margin-top: 0;
+  margin-left: auto;
+}
+
+.edit-modal-footer #edit-status {
+  margin: 0;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+#edit-status.is-error {
   color: #9a3412;
 }
 
-#handbook-edit-status.is-ok {
+#edit-status.is-ok {
   color: var(--accent);
+}
+
+.config-group h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0 0 0.7rem;
+}
+
+.config-field:last-child {
+  margin-bottom: 0;
+}
+
+.config-field-label {
+  font-weight: 650;
+  font-size: 0.88rem;
+}
+
+.config-field-help {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.config-field input {
+  margin-top: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fafaf9;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.84rem;
+}
+
+.config-field input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .count {

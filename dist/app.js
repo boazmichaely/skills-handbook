@@ -23,7 +23,7 @@
     showFullRule: false,
     openConfigId: null,
     settings: null,
-    editFlash: "",
+    editBase: null,
   };
 
   const els = {
@@ -49,7 +49,109 @@
     settingsBackdrop: document.getElementById("settings-backdrop"),
     settingsClose: document.getElementById("settings-close"),
     settingsBody: document.getElementById("settings-body"),
+    editBackdrop: document.getElementById("edit-backdrop"),
+    editModal: document.getElementById("edit-modal"),
+    editModalBody: document.getElementById("edit-modal-body"),
+    editClose: document.getElementById("edit-close"),
+    editCancel: document.getElementById("edit-cancel"),
+    editSave: document.getElementById("edit-save"),
+    editStatus: document.getElementById("edit-status"),
   };
+
+  const CONFIG_GROUPS = [
+    {
+      title: "Cursor",
+      fields: [
+        {
+          id: "cursor.skills_dir",
+          label: "Skills folder",
+          help: "Folder of Cursor skills shown under the Cursor tab.",
+        },
+        {
+          id: "cursor.rules_dir",
+          label: "Rules folder",
+          help: "Folder of Cursor rules shown under the Cursor tab.",
+        },
+      ],
+    },
+    {
+      title: "Claude",
+      fields: [
+        {
+          id: "claude.skills_dir",
+          label: "Skills folder",
+          help: "Folder of Claude skills shown under the Claude tab.",
+        },
+        {
+          id: "claude.rules_dir",
+          label: "Rules folder",
+          help: "Folder of Claude rules shown under the Claude tab.",
+        },
+        {
+          id: "claude.claude_md_path",
+          label: "Memory file (optional)",
+          help: "Optional Claude memory file. Leave empty to skip.",
+          optional: true,
+        },
+      ],
+    },
+    {
+      title: "Personal vs Tailwind tagging",
+      fields: [
+        {
+          id: "personal_skills_dir",
+          label: "Personal skills folder",
+          help: "Your skills folder. Names here count as Personal. Leave empty if none.",
+          optional: true,
+        },
+        {
+          id: "tailwind_module_skills_dir",
+          label: "Full Tailwind skills pack",
+          help: "Full Tailwind skills pack on disk. Leave empty to use the default under your Cursor skills folder (…/.lola/modules/tailwind/skills).",
+          optional: true,
+        },
+        {
+          id: "agents_skills_dir",
+          label: "Add-on skills folder",
+          help: "Add-on skills (for example gws). Names here also count as Tailwind.",
+          optional: true,
+        },
+      ],
+    },
+    {
+      title: "Tailwind config tab",
+      fields: [
+        {
+          id: "tailwind_dir",
+          label: "Tailwind config folder",
+          help: "Folder for the Tailwind config tab (tailwind.json and related files).",
+        },
+      ],
+    },
+    {
+      title: "Token file locations (status only)",
+      fields: [
+        {
+          id: "jira_apikey_path",
+          label: "Jira token file",
+          help: "Path to the Jira token file. Status only - do not paste the token here.",
+          optional: true,
+        },
+        {
+          id: "rh_offline_token_path",
+          label: "RH offline token file",
+          help: "Path to the Red Hat offline token file. Status only - do not paste the token here.",
+          optional: true,
+        },
+        {
+          id: "rh_offline_token_plain_path",
+          label: "RH plain-KEY token file",
+          help: "Path to a plain-KEY copy if you use one. Status only.",
+          optional: true,
+        },
+      ],
+    },
+  ];
 
   const CHEVRON_SVG =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="9,5 19,12 9,19" fill="currentColor"/></svg>';
@@ -494,17 +596,13 @@
         <h3>handbook.json</h3>
         <p class="settings-note">
           ${s.using_example ? "Using example defaults until you save handbook.json. " : ""}
-          Paths only - never paste API keys or token contents into this file.
+          Review findings below. Use <strong>Edit configuration</strong> to change paths in a form
+          (paths only - never paste secrets).
           If the link does not open, copy the path into your editor.
         </p>
         ${handbookLink}
-        <div class="settings-edit">
-          <textarea id="handbook-editor" class="handbook-editor" spellcheck="false" aria-label="handbook.json editor"></textarea>
-          <div class="settings-edit-actions">
-            <button type="button" id="handbook-reload" class="settings-secondary">Reload from disk</button>
-            <button type="button" id="handbook-save" class="settings-primary">Save and refresh catalog</button>
-          </div>
-          <p id="handbook-edit-status" class="settings-note" role="status"></p>
+        <div class="settings-edit-actions">
+          <button type="button" id="open-config-editor" class="settings-primary">Edit configuration</button>
         </div>
       </section>
       ${issuesHtml}
@@ -537,99 +635,201 @@
     `;
     applyColWidths();
     initSettingsColumnResize();
-    bindHandbookEditor();
+    const openEdit = document.getElementById("open-config-editor");
+    if (openEdit) openEdit.addEventListener("click", () => openConfigEditor());
+  }
+
+  function getByPath(obj, dotted) {
+    return dotted.split(".").reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
+  }
+
+  function setByPath(obj, dotted, value) {
+    const parts = dotted.split(".");
+    let cur = obj;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const key = parts[i];
+      if (!cur[key] || typeof cur[key] !== "object") cur[key] = {};
+      cur = cur[key];
+    }
+    cur[parts[parts.length - 1]] = value;
+  }
+
+  function looksLikeSecret(value) {
+    const v = String(value || "");
+    if (!v) return false;
+    if (/xox[baprs]-|ghp_[A-Za-z0-9]{20,}|glpat-|eyJ[A-Za-z0-9_\-]{20,}\.|BEGIN (RSA |OPENSSH )?PRIVATE KEY/i.test(v)) {
+      return true;
+    }
+    if (v.length > 200 && !/[\/\\]/.test(v) && !v.startsWith("~")) return true;
+    return false;
   }
 
   function setEditStatus(msg, kind) {
-    const el = document.getElementById("handbook-edit-status");
-    if (!el) return;
-    el.textContent = msg || "";
-    el.classList.toggle("is-error", kind === "error");
-    el.classList.toggle("is-ok", kind === "ok");
+    if (!els.editStatus) return;
+    els.editStatus.textContent = msg || "";
+    els.editStatus.classList.toggle("is-error", kind === "error");
+    els.editStatus.classList.toggle("is-ok", kind === "ok");
   }
 
-  async function loadHandbookEditor() {
-    const ta = document.getElementById("handbook-editor");
-    if (!ta) return;
+  function renderConfigForm(values) {
+    if (!els.editModalBody) return;
+    const html = CONFIG_GROUPS.map((group) => {
+      const fields = group.fields
+        .map((field) => {
+          const val = values[field.id] == null ? "" : String(values[field.id]);
+          return `<label class="config-field">
+            <span class="config-field-label">${escapeHtml(field.label)}</span>
+            <span class="config-field-help">${escapeHtml(field.help)}</span>
+            <input type="text" data-config-id="${escapeHtml(field.id)}" value="${escapeHtml(
+              val
+            )}" spellcheck="false" autocomplete="off" ${
+              field.optional ? 'placeholder="(optional)"' : ""
+            } />
+          </label>`;
+        })
+        .join("");
+      return `<section class="config-group"><h3>${escapeHtml(group.title)}</h3>${fields}</section>`;
+    }).join("");
+    els.editModalBody.innerHTML = html;
+  }
+
+  function collectConfigForm() {
+    const values = {};
+    if (!els.editModal) return values;
+    els.editModal.querySelectorAll("input[data-config-id]").forEach((input) => {
+      values[input.dataset.configId] = input.value.trim();
+    });
+    return values;
+  }
+
+  function validateConfigValues(values) {
+    for (const group of CONFIG_GROUPS) {
+      for (const field of group.fields) {
+        const val = values[field.id] == null ? "" : String(values[field.id]);
+        if (!field.optional && !val) {
+          return `${field.label} is required.`;
+        }
+        if (looksLikeSecret(val)) {
+          return `${field.label}: enter a filesystem path only, not a secret value.`;
+        }
+      }
+    }
+    return "";
+  }
+
+  function buildConfigObject(base, values) {
+    const out = base && typeof base === "object" ? JSON.parse(JSON.stringify(base)) : {};
+    if (!out.cursor || typeof out.cursor !== "object") out.cursor = {};
+    if (!out.claude || typeof out.claude !== "object") out.claude = {};
+    for (const group of CONFIG_GROUPS) {
+      for (const field of group.fields) {
+        setByPath(out, field.id, values[field.id] == null ? "" : String(values[field.id]));
+      }
+    }
+    return out;
+  }
+
+  async function openConfigEditor() {
     setEditStatus("Loading…");
+    if (els.editBackdrop) {
+      els.editBackdrop.hidden = false;
+      els.editBackdrop.classList.remove("hidden");
+    }
+    if (els.editModal) {
+      els.editModal.hidden = false;
+      els.editModal.classList.remove("hidden");
+    }
     try {
       const r = await fetch("/api/handbook-config", { cache: "no-store" });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Could not load handbook.json");
-      ta.value = data.text || "";
-      if (state.editFlash) {
-        setEditStatus(state.editFlash, "ok");
-        state.editFlash = "";
-      } else {
-        setEditStatus(
-          data.using_example
-            ? "Loaded example defaults. Save to create handbook.json."
-            : "Loaded from disk.",
-          "ok"
-        );
+      let parsed = {};
+      try {
+        parsed = JSON.parse(data.text || "{}");
+      } catch {
+        parsed = {};
       }
-    } catch (err) {
+      if (!parsed || typeof parsed !== "object") parsed = {};
+      state.editBase = parsed;
+      const values = {};
+      for (const group of CONFIG_GROUPS) {
+        for (const field of group.fields) {
+          const v = getByPath(parsed, field.id);
+          values[field.id] = v == null ? "" : String(v);
+        }
+      }
+      renderConfigForm(values);
       setEditStatus(
-        String(err.message || err) +
-          " Start the app with ./serve.sh (not a plain static file server).",
+        data.using_example
+          ? "Loaded example defaults. Save to create handbook.json."
+          : "Loaded from disk.",
+        "ok"
+      );
+      const first = els.editModal && els.editModal.querySelector("input");
+      if (first) first.focus();
+    } catch (err) {
+      renderConfigForm({});
+      setEditStatus(
+        String(err.message || err) + " Start the app with ./serve.sh.",
         "error"
       );
     }
   }
 
-  async function saveHandbookEditor() {
-    const ta = document.getElementById("handbook-editor");
-    if (!ta) return;
-    setEditStatus("Saving…");
-    try {
-      JSON.parse(ta.value);
-    } catch (err) {
-      setEditStatus(`Invalid JSON: ${err.message || err}`, "error");
+  function closeConfigEditor() {
+    if (els.editModal) {
+      els.editModal.hidden = true;
+      els.editModal.classList.add("hidden");
+    }
+    if (els.editBackdrop) {
+      els.editBackdrop.hidden = true;
+      els.editBackdrop.classList.add("hidden");
+    }
+    state.editBase = null;
+    setEditStatus("");
+  }
+
+  async function saveConfigForm() {
+    const values = collectConfigForm();
+    const verr = validateConfigValues(values);
+    if (verr) {
+      setEditStatus(verr, "error");
       return;
     }
+    const payload = buildConfigObject(state.editBase || {}, values);
+    setEditStatus("Saving…");
     try {
       const r = await fetch("/api/handbook-config", {
         method: "POST",
         headers: { "Content-Type": "application/json; charset=utf-8" },
-        body: ta.value,
+        body: JSON.stringify(payload, null, 2),
       });
       const data = await r.json();
-      if (!r.ok || !data.ok) {
-        throw new Error(data.error || "Save failed");
-      }
-      setEditStatus("Saved. Reloading catalog…", "ok");
+      if (!r.ok || !data.ok) throw new Error(data.error || "Save failed");
       const catalog = await fetch(`skills.json?v=${Date.now()}`, { cache: "no-store" });
       if (!catalog.ok) throw new Error("Catalog missing after save - restart ./serve.sh");
-      const payload = await catalog.json();
-      const cursor = payload.cursor || {};
-      const claude = payload.claude || {};
+      const body = await catalog.json();
+      const cursor = body.cursor || {};
+      const claude = body.claude || {};
       state.cursor = {
-        skills: cursor.skills || payload.skills || [],
-        rules: cursor.rules || payload.rules || [],
+        skills: cursor.skills || body.skills || [],
+        rules: cursor.rules || body.rules || [],
       };
       state.claude = {
         skills: claude.skills || [],
         rules: claude.rules || [],
       };
-      state.config = Array.isArray(payload.config) ? payload.config : [];
-      state.categories = payload.categories || [];
-      state.generatedAt = payload.generated_at || "";
-      state.settings = payload.settings || null;
-      state.editFlash = "Saved and catalog refreshed.";
+      state.config = Array.isArray(body.config) ? body.config : [];
+      state.categories = body.categories || [];
+      state.generatedAt = body.generated_at || "";
+      state.settings = body.settings || null;
       updateMeta();
       setRuntime(state.runtime);
+      closeConfigEditor();
       renderSettings();
     } catch (err) {
       setEditStatus(String(err.message || err), "error");
     }
-  }
-
-  function bindHandbookEditor() {
-    const reload = document.getElementById("handbook-reload");
-    const save = document.getElementById("handbook-save");
-    if (reload) reload.addEventListener("click", () => loadHandbookEditor());
-    if (save) save.addEventListener("click", () => saveHandbookEditor());
-    loadHandbookEditor();
   }
 
   function initSettingsColumnResize() {
@@ -861,8 +1061,17 @@
   if (els.settingsBtn) els.settingsBtn.addEventListener("click", openSettings);
   if (els.settingsClose) els.settingsClose.addEventListener("click", closeSettings);
   if (els.settingsBackdrop) els.settingsBackdrop.addEventListener("click", closeSettings);
+  if (els.editClose) els.editClose.addEventListener("click", closeConfigEditor);
+  if (els.editCancel) els.editCancel.addEventListener("click", closeConfigEditor);
+  if (els.editBackdrop) els.editBackdrop.addEventListener("click", closeConfigEditor);
+  if (els.editSave) els.editSave.addEventListener("click", () => saveConfigForm());
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeSettings();
+    if (e.key !== "Escape") return;
+    if (els.editModal && !els.editModal.hidden) {
+      closeConfigEditor();
+      return;
+    }
+    closeSettings();
   });
 
   applyColWidths();

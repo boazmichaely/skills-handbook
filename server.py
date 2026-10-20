@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from http import HTTPStatus
@@ -17,6 +18,12 @@ HANDBOOK = ROOT / "handbook.json"
 HANDBOOK_EXAMPLE = ROOT / "handbook.example.json"
 HOST = "127.0.0.1"
 PORT = int(__import__("os").environ.get("PORT", "8765"))
+
+_SECRETISH = re.compile(
+    r"(xox[baprs]-|ghp_[A-Za-z0-9]{20,}|glpat-[A-Za-z0-9_\-]{20,}|"
+    r"eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{10,}|BEGIN (RSA |OPENSSH )?PRIVATE KEY)",
+    re.I,
+)
 
 
 def _load_text() -> tuple[str, Path, bool]:
@@ -42,6 +49,50 @@ def _regenerate() -> tuple[bool, str]:
         err = (proc.stderr or proc.stdout or "generate.py failed").strip()
         return False, err
     return True, (proc.stdout or "").strip()
+
+
+def _validate_config(data: object) -> str | None:
+    if not isinstance(data, dict):
+        return "handbook.json must be a JSON object."
+    cursor = data.get("cursor")
+    if cursor is not None and not isinstance(cursor, dict):
+        return '"cursor" must be an object.'
+    claude = data.get("claude")
+    if claude is not None and not isinstance(claude, dict):
+        return '"claude" must be an object.'
+
+    def check_str(label: str, value: object) -> str | None:
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            return f"{label} must be a string path."
+        if _SECRETISH.search(value) or (len(value) > 200 and "/" not in value and "\\" not in value and not value.startswith("~")):
+            return f"{label} looks like a secret value. Put a filesystem path only."
+        return None
+
+    for key in (
+        "personal_skills_dir",
+        "tailwind_dir",
+        "tailwind_module_skills_dir",
+        "agents_skills_dir",
+        "jira_apikey_path",
+        "rh_offline_token_path",
+        "rh_offline_token_plain_path",
+    ):
+        err = check_str(key, data.get(key))
+        if err:
+            return err
+    if isinstance(cursor, dict):
+        for key in ("skills_dir", "rules_dir"):
+            err = check_str(f"cursor.{key}", cursor.get(key))
+            if err:
+                return err
+    if isinstance(claude, dict):
+        for key in ("skills_dir", "rules_dir", "claude_md_path"):
+            err = check_str(f"claude.{key}", claude.get(key))
+            if err:
+                return err
+    return None
 
 
 class HandbookHandler(SimpleHTTPRequestHandler):
@@ -109,10 +160,11 @@ class HandbookHandler(SimpleHTTPRequestHandler):
             )
             return
 
-        if not isinstance(data, dict):
+        err = _validate_config(data)
+        if err:
             self._send_json(
                 HTTPStatus.BAD_REQUEST,
-                {"ok": False, "error": "handbook.json must be a JSON object."},
+                {"ok": False, "error": err},
             )
             return
 
