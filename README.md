@@ -32,7 +32,7 @@ Then open http://127.0.0.1:9000 instead.
 
 ## Usage
 
-![My Skills Handbook UI](docs/ui-overview.jpg)
+![My Skills Handbook UI](images/ui-overview.png)
 
 ### Navigation
 The top **tabs** switch between Cursor, Claude, and Tailwind config. On Cursor and Claude, the **section tabs** below choose Skills or Rules.
@@ -42,26 +42,26 @@ The top **tabs** switch between Cursor, Claude, and Tailwind config. On Cursor a
 ### Exploring Skills
 Click a table row to expand it. You get a short detail panel: the path on disk, when to use the skill, and detected MCP / auth / tools.
 
-![Expanded skill detail](docs/skill-expanded.jpg)
+![Expanded skill detail](images/skill-expanded.png)
 
 From there, **View full SKILL.md** opens the underlying skill file in the same panel (frontmatter and body). Use **Hide full SKILL.md** to collapse that layer again.
 
-![Full SKILL.md view](docs/skill-full-md.jpg)
+![Full SKILL.md view](images/skill-full-md.png)
 
 Rules and Tailwind config rows expand the same way (config shows path and value detail instead of a SKILL.md).
 
 ### Settings
 **Settings** (gear, top right) is where you diagnose paths. Open it when a tab looks empty or Personal / Tailwind tagging looks wrong.
 
-![Settings control](docs/settings-entry.jpg)
+![Settings control](images/settings-entry.png)
 
 The panel lists every key from `handbook.json`: whether the path was **found** or **missing**, how many skills sit there (**# skills**), and the resolved location. **Suspicious** calls out origin or path problems when something looks off.
 
-![Settings panel](docs/settings-panel.png)
+![Settings panel](images/settings-panel.png)
 
 **Edit configuration** opens a form for those same paths (the `handbook.json` file path is shown at the top). Gray fields are unchanged defaults - the app does not require those folders to exist until you edit them. Change a path, leave the field to validate it, then **Save and refresh catalog** (only works when you started with `./serve.sh`). Paths only - never paste secrets into the form.
 
-![Edit configuration](docs/edit-configuration.jpg)
+![Edit configuration](images/edit-configuration.png)
 
 ## Upgrade
 
