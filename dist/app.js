@@ -578,14 +578,15 @@
 
     const handbookAbs = s.handbook_json_resolved || "";
     const handbookLine = handbookAbs
-      ? `<p class="settings-handbook-line">
-          <button type="button" id="open-config-editor" class="edit-config-link">[edit configuration]</button><a class="mono handbook-path-link" href="${escapeHtml(
+      ? `<div class="settings-handbook-line">
+          <button type="button" id="open-config-editor" class="settings-primary">Edit configuration</button>
+          <a class="mono handbook-path-link" href="${escapeHtml(
             fileHref(handbookAbs)
           )}">${escapeHtml(handbookAbs)}</a>
-        </p>`
-      : `<p class="settings-handbook-line">
-          <button type="button" id="open-config-editor" class="edit-config-link">[edit configuration]</button>
-        </p>`;
+        </div>`
+      : `<div class="settings-handbook-line">
+          <button type="button" id="open-config-editor" class="settings-primary">Edit configuration</button>
+        </div>`;
 
     const pathRows = paths
       .map((p) => {
