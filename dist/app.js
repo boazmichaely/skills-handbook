@@ -502,7 +502,7 @@
       <section class="settings-paths-section">
         <h3>Paths from handbook.json</h3>
         <p class="settings-note">
-          <strong>Skills in folder</strong> is how many skill folders exist at that path.
+          <strong># skills</strong> is how many skill folders exist at that path.
           Those names drive All / Personal / Tailwind.
         </p>
         <div class="settings-table-wrap">
@@ -510,14 +510,14 @@
             <colgroup>
               <col data-col="settings-key" style="width: 28%" />
               <col data-col="settings-status" style="width: 5.5rem" />
-              <col data-col="settings-count" style="width: 6.5rem" />
+              <col data-col="settings-count" style="width: 5.5rem" />
               <col data-col="settings-path" style="width: auto" />
             </colgroup>
             <thead>
               <tr>
                 <th data-col="settings-key">Key<span class="col-resizer" data-resize="settings-key"></span></th>
                 <th data-col="settings-status">Status<span class="col-resizer" data-resize="settings-status"></span></th>
-                <th data-col="settings-count">Skills in folder<span class="col-resizer" data-resize="settings-count"></span></th>
+                <th data-col="settings-count"># skills<span class="col-resizer" data-resize="settings-count"></span></th>
                 <th data-col="settings-path">Resolved path</th>
               </tr>
             </thead>
