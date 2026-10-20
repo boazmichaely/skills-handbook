@@ -690,7 +690,7 @@
 
   function renderConfigForm(values) {
     if (!els.editModalBody) return;
-    const html = CONFIG_GROUPS.map((group, index) => {
+    const html = CONFIG_GROUPS.map((group) => {
       const fields = group.fields
         .map((field) => {
           const val = values[field.id] == null ? "" : String(values[field.id]);
@@ -708,12 +708,9 @@
           </label>`;
         })
         .join("");
-      return `<section class="config-group" data-group-index="${index + 1}">
-        <header class="config-group-header">
-          <span class="config-group-index" aria-hidden="true">${index + 1}</span>
-          <h3>${escapeHtml(group.title)}</h3>
-        </header>
-        <div class="config-group-body">${fields}</div>
+      return `<section class="config-group">
+        <h3>${escapeHtml(group.title)}</h3>
+        ${fields}
       </section>`;
     }).join("");
     els.editModalBody.innerHTML = html;
