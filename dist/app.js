@@ -326,7 +326,8 @@
     els.catFilters.innerHTML = chips.join("");
     els.catFilters.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
-        state.category = btn.dataset.cat;
+        const next = btn.dataset.cat;
+        state.category = next === state.category && next !== "all" ? "all" : next;
         state.openSkillId = null;
         state.showFullSkill = false;
         renderCatFilters();
@@ -456,7 +457,9 @@
     els.configSourceFilters.innerHTML = chips.join("");
     els.configSourceFilters.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
-        state.configSource = btn.dataset.configSource;
+        const next = btn.dataset.configSource;
+        state.configSource =
+          next === state.configSource && next !== "all" ? "all" : next;
         state.openConfigId = null;
         renderConfigSourceFilters();
         renderConfigTable();
@@ -1197,9 +1200,11 @@
 
   document.querySelectorAll(".filter-links.origin button[data-origin]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".filter-links.origin button[data-origin]").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.origin = btn.dataset.origin;
+      const next = btn.dataset.origin;
+      state.origin = next === state.origin && next !== "all" ? "all" : next;
+      document.querySelectorAll(".filter-links.origin button[data-origin]").forEach((b) => {
+        b.classList.toggle("active", b.dataset.origin === state.origin);
+      });
       state.openSkillId = null;
       state.showFullSkill = false;
       renderSkillsTable();
