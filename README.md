@@ -34,7 +34,15 @@ The top **tabs** switch between Cursor, Claude, and Tailwind config. On Cursor a
 
 **Live search** narrows the list as you type. Next to it (and on a second row for categories), **filters** are multi-select chips: click to include a source or category, click again to clear it, or choose **All** to reset that group.
 
-Click a table row to expand details. The gear opens **Settings**, where you can review paths and use **Edit configuration** to change `handbook.json`.
+Click a table row to expand it. You get a short detail panel: the path on disk, when to use the skill, and detected MCP / auth / tools.
+
+![Expanded skill detail](docs/skill-expanded.jpg)
+
+From there, **View full SKILL.md** opens the underlying skill file in the same panel (frontmatter and body). Use **Hide full SKILL.md** to collapse that layer again.
+
+![Full SKILL.md view](docs/skill-full-md.jpg)
+
+Rules and Tailwind config rows expand the same way (config shows path and value detail instead of a SKILL.md). The gear opens **Settings**, where you can review paths and use **Edit configuration** to change `handbook.json`.
 
 ## Upgrade
 
