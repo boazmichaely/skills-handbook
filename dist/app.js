@@ -22,6 +22,7 @@
     openRuleId: null,
     showFullRule: false,
     openConfigId: null,
+    settings: null,
   };
 
   const els = {
@@ -42,6 +43,11 @@
     configView: document.getElementById("config-view"),
     runtimePane: document.getElementById("runtime-pane"),
     sectionTabs: document.getElementById("section-tabs"),
+    settingsBtn: document.getElementById("settings-btn"),
+    settingsPanel: document.getElementById("settings-panel"),
+    settingsBackdrop: document.getElementById("settings-backdrop"),
+    settingsClose: document.getElementById("settings-close"),
+    settingsBody: document.getElementById("settings-body"),
   };
 
   const CHEVRON_SVG =
@@ -382,6 +388,143 @@
       `Cursor ${c.skills.length} skills / ${c.rules.length} rules · ` +
       `Claude ${cl.skills.length} skills / ${cl.rules.length} rules · ` +
       `${state.config.length} config · generated ${state.generatedAt}`;
+    const issueCount = (state.settings && state.settings.issues && state.settings.issues.length) || 0;
+    if (els.settingsBtn) {
+      els.settingsBtn.classList.toggle("has-issues", issueCount > 0);
+      els.settingsBtn.title =
+        issueCount > 0
+          ? `Settings (${issueCount} issue${issueCount === 1 ? "" : "s"})`
+          : "Settings";
+    }
+  }
+
+  function renderSettings() {
+    if (!els.settingsBody) return;
+    const s = state.settings;
+    if (!s) {
+      els.settingsBody.innerHTML = "<p class=\"settings-note\">No settings data. Restart with ./serve.sh.</p>";
+      return;
+    }
+    const issues = s.issues || [];
+    const paths = s.paths || [];
+    const counts = s.counts || {};
+    const issuesHtml = issues.length
+      ? `<section>
+          <h3>Suspicious</h3>
+          <ul class="settings-issues">
+            ${issues
+              .map(
+                (iss) =>
+                  `<li class="${escapeHtml(iss.level || "warn")}">${escapeHtml(
+                    iss.message || ""
+                  )}</li>`
+              )
+              .join("")}
+          </ul>
+        </section>`
+      : `<section>
+          <h3>Suspicious</h3>
+          <p class="settings-note">No path or origin issues detected.</p>
+        </section>`;
+
+    const pathRows = paths
+      .map((p) => {
+        const status = p.exists
+          ? '<span class="ok">found</span>'
+          : '<span class="missing">missing</span>';
+        const count =
+          p.kind === "dir" && p.exists ? String(p.skill_count ?? 0) : "-";
+        return `<tr>
+          <td><code class="mono">${escapeHtml(p.key || "")}</code></td>
+          <td>${status}</td>
+          <td>${escapeHtml(count)}</td>
+          <td><code class="mono">${escapeHtml(p.resolved || p.configured || "")}</code>
+            ${p.note ? `<div class="settings-note">${escapeHtml(p.note)}</div>` : ""}
+            ${
+              p.configured && p.configured !== p.resolved
+                ? `<div class="settings-note">configured: <code>${escapeHtml(
+                    p.configured
+                  )}</code></div>`
+                : ""
+            }
+          </td>
+        </tr>`;
+      })
+      .join("");
+
+    const countCards = [
+      ["Cursor skills", counts.cursor_skills],
+      ["Cursor personal / Tailwind", `${counts.cursor_personal ?? 0} / ${counts.cursor_tailwind ?? 0}`],
+      ["Claude skills", counts.claude_skills],
+      ["Claude personal / Tailwind", `${counts.claude_personal ?? 0} / ${counts.claude_tailwind ?? 0}`],
+      ["Lola module skills", counts.lola_module_skills],
+      ["Agents skills", counts.agents_skills],
+      ["Personal dir skills", counts.personal_dir_skills],
+      ["Config rows", counts.config_rows],
+    ]
+      .map(
+        ([label, value]) =>
+          `<div><span class="label">${escapeHtml(label)}</span><span class="value">${escapeHtml(
+            String(value ?? 0)
+          )}</span></div>`
+      )
+      .join("");
+
+    els.settingsBody.innerHTML = `
+      <section>
+        <h3>handbook.json</h3>
+        <p class="settings-note">
+          Edit this file on disk, then restart <code>./serve.sh</code> and hard-refresh.
+          ${s.using_example ? " Currently using the example defaults (no handbook.json yet)." : ""}
+        </p>
+        <p class="settings-note"><code>${escapeHtml(s.handbook_json_resolved || s.handbook_json || "")}</code></p>
+      </section>
+      ${issuesHtml}
+      <section>
+        <h3>Counts</h3>
+        <div class="settings-counts">${countCards}</div>
+      </section>
+      <section>
+        <h3>Paths</h3>
+        <div class="settings-table-wrap">
+          <table class="settings-table">
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Status</th>
+                <th>Skills</th>
+                <th>Resolved path</th>
+              </tr>
+            </thead>
+            <tbody>${pathRows}</tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
+  function openSettings() {
+    renderSettings();
+    if (els.settingsPanel) {
+      els.settingsPanel.hidden = false;
+      els.settingsPanel.classList.remove("hidden");
+    }
+    if (els.settingsBackdrop) {
+      els.settingsBackdrop.hidden = false;
+      els.settingsBackdrop.classList.remove("hidden");
+    }
+    if (els.settingsClose) els.settingsClose.focus();
+  }
+
+  function closeSettings() {
+    if (els.settingsPanel) {
+      els.settingsPanel.hidden = true;
+      els.settingsPanel.classList.add("hidden");
+    }
+    if (els.settingsBackdrop) {
+      els.settingsBackdrop.hidden = true;
+      els.settingsBackdrop.classList.add("hidden");
+    }
   }
 
   function setRuntime(runtime) {
@@ -548,12 +691,19 @@
     th.style.position = "sticky";
   });
 
+  if (els.settingsBtn) els.settingsBtn.addEventListener("click", openSettings);
+  if (els.settingsClose) els.settingsClose.addEventListener("click", closeSettings);
+  if (els.settingsBackdrop) els.settingsBackdrop.addEventListener("click", closeSettings);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSettings();
+  });
+
   applyColWidths();
   initColumnResize();
 
   fetch(`skills.json?v=${Date.now()}`)
     .then((r) => {
-      if (!r.ok) throw new Error("skills.json missing - run generate.py or ./serve.sh");
+      if (!r.ok) throw new Error("skills.json missing - run ./serve.sh");
       return r.json();
     })
     .then((data) => {
@@ -570,6 +720,7 @@
       state.config = Array.isArray(data.config) ? data.config : [];
       state.categories = data.categories || [];
       state.generatedAt = data.generated_at || "";
+      state.settings = data.settings || null;
       updateMeta();
       setRuntime(state.runtime);
     })

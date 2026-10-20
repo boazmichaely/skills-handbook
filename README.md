@@ -19,6 +19,8 @@ Open http://127.0.0.1:8765
 
 After you change `handbook.json` or install/remove skills on disk: stop the server (Ctrl-C), run `./serve.sh` again, then hard-refresh the browser.
 
+In the UI, open **Settings** (gear, top right) to see the resolved `handbook.json` path, path status, skill counts, and suspicious misconfiguration warnings. Edit paths in the real `handbook.json` file on disk (no in-app editor).
+
 `dist/skills.json` is written on your machine and gitignored. Do not commit it. Put only filesystem paths in `handbook.json`, never API keys or token contents.
 
 ## For AI agents installing this for someone

@@ -102,9 +102,13 @@ def _normalize_legacy_config(data: dict) -> dict:
     return data
 
 
-def load_config() -> dict:
-    """Merge handbook.json (or handbook.example.json) over defaults."""
+def load_config() -> tuple[dict, Path | None]:
+    """Merge handbook.json (or handbook.example.json) over defaults.
+
+    Returns (config, path_to_file_used).
+    """
     cfg = _deep_merge({}, DEFAULT_CONFIG)
+    used: Path | None = None
     for name in ("handbook.json", "handbook.example.json"):
         path = ROOT / name
         if not path.is_file():
@@ -116,9 +120,13 @@ def load_config() -> dict:
         if not isinstance(data, dict):
             raise SystemExit(f"{path.name} must be a JSON object")
         data = _normalize_legacy_config(data)
-        cfg = _deep_merge(cfg, {k: v for k, v in data.items() if k in DEFAULT_CONFIG or k in ("cursor", "claude")})
+        cfg = _deep_merge(
+            cfg,
+            {k: v for k, v in data.items() if k in DEFAULT_CONFIG or k in ("cursor", "claude")},
+        )
+        used = path
         break
-    return cfg
+    return cfg, used
 
 
 def apply_config(cfg: dict) -> None:
@@ -170,6 +178,228 @@ def discover_skill_ids(directory: Path | None) -> set[str]:
         if (child / "SKILL.md").is_file() or (child / "skill.md").is_file():
             ids.add(child.name)
     return ids
+
+
+def _path_row(
+    key: str,
+    configured: str,
+    path: Path | None,
+    *,
+    kind: str = "dir",
+    note: str = "",
+) -> dict:
+    exists = False
+    skill_count = 0
+    resolved = ""
+    if path is not None:
+        resolved = str(path)
+        if kind == "file":
+            exists = path.is_file()
+        else:
+            exists = path.is_dir()
+            if exists:
+                skill_count = len(discover_skill_ids(path))
+    return {
+        "key": key,
+        "configured": configured,
+        "resolved": resolved,
+        "exists": exists,
+        "skill_count": skill_count,
+        "kind": kind,
+        "note": note,
+    }
+
+
+def build_settings(
+    *,
+    config_file: Path | None,
+    cfg: dict,
+    personal_ids: set[str],
+    lola_ids: set[str],
+    agents_ids: set[str],
+    cursor_skills: list[dict],
+    claude_skills: list[dict],
+    cursor_rules_count: int,
+    claude_rules_count: int,
+    config_count: int,
+) -> dict:
+    """Read-only diagnostics for the Settings panel."""
+    cursor_cfg = cfg.get("cursor") or {}
+    claude_cfg = cfg.get("claude") or {}
+    personal_cfg = str(cfg.get("personal_skills_dir") or "").strip()
+    module_cfg = str(cfg.get("tailwind_module_skills_dir") or "").strip()
+    agents_cfg = str(cfg.get("agents_skills_dir") or "").strip()
+    lola_auto = CURSOR_SKILLS_DIR / ".lola" / "modules" / "tailwind" / "skills"
+    lola_path = TW_MODULE_SKILLS_DIR if TW_MODULE_SKILLS_DIR is not None else lola_auto
+    lola_note = "auto" if not module_cfg else "explicit"
+
+    paths = [
+        _path_row(
+            "cursor.skills_dir",
+            str(cursor_cfg.get("skills_dir") or DEFAULT_CONFIG["cursor"]["skills_dir"]),
+            CURSOR_SKILLS_DIR,
+        ),
+        _path_row(
+            "cursor.rules_dir",
+            str(cursor_cfg.get("rules_dir") or DEFAULT_CONFIG["cursor"]["rules_dir"]),
+            CURSOR_RULES_DIR,
+        ),
+        _path_row(
+            "claude.skills_dir",
+            str(claude_cfg.get("skills_dir") or DEFAULT_CONFIG["claude"]["skills_dir"]),
+            CLAUDE_SKILLS_DIR,
+        ),
+        _path_row(
+            "claude.rules_dir",
+            str(claude_cfg.get("rules_dir") or DEFAULT_CONFIG["claude"]["rules_dir"]),
+            CLAUDE_RULES_DIR,
+        ),
+        _path_row(
+            "claude.claude_md_path",
+            str(claude_cfg.get("claude_md_path") or ""),
+            CLAUDE_MD_PATH,
+            kind="file",
+        ),
+        _path_row(
+            "personal_skills_dir",
+            personal_cfg,
+            PERSONAL_SKILLS_DIR,
+            note="empty = unused" if not personal_cfg else "",
+        ),
+        _path_row(
+            "tailwind_module_skills_dir",
+            module_cfg or f"(auto) {_display_path(lola_auto)}",
+            lola_path,
+            note=lola_note,
+        ),
+        _path_row(
+            "agents_skills_dir",
+            agents_cfg or str(DEFAULT_CONFIG["agents_skills_dir"]),
+            AGENTS_SKILLS_DIR,
+        ),
+        _path_row(
+            "tailwind_dir",
+            str(cfg.get("tailwind_dir") or DEFAULT_CONFIG["tailwind_dir"]),
+            TW_DIR,
+        ),
+        _path_row(
+            "jira_apikey_path",
+            str(cfg.get("jira_apikey_path") or ""),
+            JIRA_APIKEY_PATH,
+            kind="file",
+        ),
+        _path_row(
+            "rh_offline_token_path",
+            str(cfg.get("rh_offline_token_path") or ""),
+            RH_OFFLINE_TOKEN_PATH,
+            kind="file",
+        ),
+        _path_row(
+            "rh_offline_token_plain_path",
+            str(cfg.get("rh_offline_token_plain_path") or ""),
+            RH_OFFLINE_TOKEN_PLAIN_PATH,
+            kind="file",
+        ),
+    ]
+
+    def origin_counts(skills: list[dict]) -> dict[str, int]:
+        personal = sum(1 for s in skills if s.get("origin") == "personal")
+        tailwind = sum(1 for s in skills if s.get("origin") == "tailwind")
+        return {"personal": personal, "tailwind": tailwind, "total": len(skills)}
+
+    cursor_origin = origin_counts(cursor_skills)
+    claude_origin = origin_counts(claude_skills)
+
+    issues: list[dict] = []
+
+    def issue(level: str, code: str, message: str) -> None:
+        issues.append({"level": level, "code": code, "message": message})
+
+    handbook_path = config_file if config_file is not None else ROOT / "handbook.json"
+    if config_file is None or config_file.name != "handbook.json":
+        issue(
+            "warn",
+            "using_example_config",
+            "No handbook.json found - using handbook.example.json defaults. "
+            "Copy the example to handbook.json and set paths for this machine.",
+        )
+    if not CURSOR_SKILLS_DIR.is_dir():
+        issue(
+            "error",
+            "cursor_skills_missing",
+            f"cursor.skills_dir does not exist: {CURSOR_SKILLS_DIR}",
+        )
+    if not CLAUDE_SKILLS_DIR.is_dir():
+        issue(
+            "warn",
+            "claude_skills_missing",
+            f"claude.skills_dir does not exist: {CLAUDE_SKILLS_DIR}",
+        )
+    if personal_cfg and PERSONAL_SKILLS_DIR is not None and not PERSONAL_SKILLS_DIR.is_dir():
+        issue(
+            "warn",
+            "personal_skills_missing",
+            f"personal_skills_dir is set but missing: {PERSONAL_SKILLS_DIR}",
+        )
+    if not lola_path.is_dir():
+        issue(
+            "warn",
+            "lola_module_missing",
+            "Tailwind Lola skills folder not found "
+            f"({lola_path}). Cursor Tailwind origin will not use the full Lola pack.",
+        )
+    if agents_ids and not lola_ids:
+        issue(
+            "warn",
+            "agents_without_lola",
+            f"Found {len(agents_ids)} skills under agents_skills_dir but no Lola module skills. "
+            "The Personal/Tailwind filter may show mostly gws/agent skills as Tailwind.",
+        )
+    if agents_ids and claude_origin["tailwind"] and claude_origin["tailwind"] <= len(agents_ids):
+        claude_tw_ids = {s["id"] for s in claude_skills if s.get("origin") == "tailwind"}
+        if claude_tw_ids and claude_tw_ids <= agents_ids and not lola_ids:
+            issue(
+                "warn",
+                "claude_tailwind_looks_like_gws_only",
+                "Claude skills tagged Tailwind look like the agents/gws set only. "
+                "Check that Cursor Lola skills were not copied into the wrong folder.",
+            )
+    if cursor_origin["total"] and cursor_origin["total"] < 10 and agents_ids:
+        issue(
+            "warn",
+            "cursor_skills_sparse",
+            f"Only {cursor_origin['total']} Cursor skills found while agents_skills_dir has "
+            f"{len(agents_ids)}. cursor.skills_dir may point at the wrong tree.",
+        )
+    if not TW_DIR.is_dir():
+        issue(
+            "warn",
+            "tailwind_dir_missing",
+            f"tailwind_dir does not exist: {TW_DIR}",
+        )
+
+    return {
+        "handbook_json": _display_path(handbook_path),
+        "handbook_json_resolved": str(handbook_path),
+        "handbook_json_exists": handbook_path.is_file(),
+        "using_example": config_file is None or config_file.name != "handbook.json",
+        "paths": paths,
+        "counts": {
+            "cursor_skills": cursor_origin["total"],
+            "cursor_rules": cursor_rules_count,
+            "cursor_personal": cursor_origin["personal"],
+            "cursor_tailwind": cursor_origin["tailwind"],
+            "claude_skills": claude_origin["total"],
+            "claude_rules": claude_rules_count,
+            "claude_personal": claude_origin["personal"],
+            "claude_tailwind": claude_origin["tailwind"],
+            "personal_dir_skills": len(personal_ids),
+            "lola_module_skills": len(lola_ids),
+            "agents_skills": len(agents_ids),
+            "config_rows": config_count,
+        },
+        "issues": issues,
+    }
 
 
 def build_origin_map(
@@ -999,7 +1229,7 @@ def collect_claude_rules(rules_dir: Path, claude_md: Path | None) -> list[dict]:
 
 
 def main() -> None:
-    cfg = load_config()
+    cfg, config_file = load_config()
     apply_config(cfg)
 
     DIST.mkdir(parents=True, exist_ok=True)
@@ -1009,10 +1239,10 @@ def main() -> None:
         )
 
     personal_ids = discover_skill_ids(PERSONAL_SKILLS_DIR)
+    lola_ids = discover_skill_ids(TW_MODULE_SKILLS_DIR)
+    agents_ids = discover_skill_ids(AGENTS_SKILLS_DIR)
     # Lola-installed Tailwind skills + gws-cli (etc.) agent skills
-    tailwind_ids = discover_skill_ids(TW_MODULE_SKILLS_DIR) | discover_skill_ids(
-        AGENTS_SKILLS_DIR
-    )
+    tailwind_ids = lola_ids | agents_ids
 
     cursor_skills, cursor_meta = collect_runtime_skills(
         CURSOR_SKILLS_DIR,
@@ -1031,6 +1261,18 @@ def main() -> None:
     claude_rules = collect_claude_rules(CLAUDE_RULES_DIR, CLAUDE_MD_PATH)
 
     config = collect_config()
+    settings = build_settings(
+        config_file=config_file,
+        cfg=cfg,
+        personal_ids=personal_ids,
+        lola_ids=lola_ids,
+        agents_ids=agents_ids,
+        cursor_skills=cursor_skills,
+        claude_skills=claude_skills,
+        cursor_rules_count=len(cursor_rules),
+        claude_rules_count=len(claude_rules),
+        config_count=len(config),
+    )
 
     payload = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -1057,6 +1299,7 @@ def main() -> None:
         },
         "config": config,
         "config_count": len(config),
+        "settings": settings,
         # Flat aliases (Cursor) for older handbook UI / scripts
         "skills": cursor_skills,
         "rules": cursor_rules,
@@ -1073,12 +1316,13 @@ def main() -> None:
         f"Wrote {out}\n"
         f"  cursor: {len(cursor_skills)} skills, {len(cursor_rules)} rules\n"
         f"  claude: {len(claude_skills)} skills, {len(claude_rules)} rules\n"
-        f"  tailwind config: {len(config)} rows"
+        f"  tailwind config: {len(config)} rows\n"
+        f"  settings issues: {len(settings['issues'])}"
     )
     od = cursor_meta["origin_discovery"]
     print(
         f"  cursor origin: {od['personal']} personal, {od['tailwind']} tailwind"
-        f" (lola={od['tailwind_ids']}, personal_dir={od['personal_ids']})"
+        f" (lola={len(lola_ids)}, agents={len(agents_ids)}, personal_dir={len(personal_ids)})"
     )
 
 
