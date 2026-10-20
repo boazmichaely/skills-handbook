@@ -23,13 +23,22 @@ Then edit `handbook.json` (see below). That file is how this tool finds *your* s
 Open http://127.0.0.1:8765  
 (`PORT=9000 ./serve.sh` for another port.)
 
-`./serve.sh` reads `handbook.json`, rebuilds the catalog from disk, then serves the UI. Rebuild only: `python3 generate.py`.
+`./serve.sh` always runs `generate.py` first (reads `handbook.json`, writes `dist/skills.json`), then starts the local web server. You do **not** need to run `generate.py` yourself for normal use.
+
+Use `python3 generate.py` alone only if the server is already running and you want to refresh the catalog without stopping it - then hard-refresh the browser.
 
 `dist/skills.json` is generated on your machine and gitignored - do not commit it. Put only filesystem paths in `handbook.json`, never API keys or token contents.
 
 ## Personalize `handbook.json`
 
-Copy from `handbook.example.json`. Use `~` for your home directory; it expands on every run. After you change this file, run `./serve.sh` (or `python3 generate.py`) again and hard-refresh the browser.
+Copy from `handbook.example.json`. Use `~` for your home directory; it expands when the catalog is built.
+
+After you edit `handbook.json` (or add/remove skills on disk), the UI will not update until a new catalog is built:
+
+1. Stop the server if it is running (Ctrl-C), then run `./serve.sh` again, **or**
+2. With the server still up, run `python3 generate.py` in another terminal.
+
+Then hard-refresh the browser (Cmd+Shift+R / Ctrl+Shift+R).
 
 ### What each key does
 
