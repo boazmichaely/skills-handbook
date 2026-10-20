@@ -23,15 +23,12 @@ If 8765 is already in use, or you prefer another port, start with a different nu
 ```bash
 PORT=9000 ./serve.sh
 ```
-
 Then open http://127.0.0.1:9000 instead.
 
-## Day to day
+**Note**
 
 - `./serve.sh` rebuilds the catalog from disk, then serves the UI (localhost only).
 - After skill or rule changes on disk: restart `./serve.sh`, then hard-refresh.
-- **Settings** (gear): lists the folders where skills are expected. **Edit configuration** edits the config file (`handbook.json`).
-- Source and category filters are multi-select; **All** clears that group.
 
 ## Usage
 
