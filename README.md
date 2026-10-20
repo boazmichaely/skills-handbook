@@ -26,6 +26,20 @@ PORT=9000 ./serve.sh
 
 Then open http://127.0.0.1:9000 instead.
 
+## Usage
+
+![My Skills Handbook UI](docs/ui-overview.jpg)
+
+| UI element | Name | What it does |
+| --- | --- | --- |
+| **Cursor** / **Claude** / **Tailwind config** | Tabs | Switch the main area: Cursor skills and rules, Claude skills and rules, or Tailwind config status. |
+| **Skills** / **Rules** | Section tabs | Under Cursor or Claude, choose whether you are browsing skills or rules. Hidden on the Tailwind config tab. |
+| Search field | Live search | Filters the list as you type (every character updates the results). |
+| **All** / **Personal** / **Tailwind** | Source filters | Multi-select chips. Narrow skills by origin. Click again to clear one chip; **All** clears the group. |
+| **All categories** / category chips | Category filters | Multi-select chips. Narrow skills by category. Same toggle behavior as source filters. |
+| Table rows | Expandable rows | Click a row (or its chevron) to open detail for that skill, rule, or config entry. |
+| **Settings** (gear) | Settings | Path diagnostics and **Edit configuration** for `handbook.json`. |
+
 ## Upgrade
 
 If you already cloned this repo:
