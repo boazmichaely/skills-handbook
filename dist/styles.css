@@ -464,8 +464,8 @@ body {
 
 .config-group {
   margin: 0;
-  padding: 0 0 1.05rem;
-  border-bottom: 1px solid #e7e5e4;
+  padding: 0 0 1.15rem;
+  border-bottom: 2px solid #a8a29e;
 }
 
 .config-group:last-child {
@@ -474,13 +474,13 @@ body {
 }
 
 .config-group h3 {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.85rem;
   padding: 0;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #a8a29e;
+  font-size: 1.45rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: #44403c;
 }
 
 .config-field {
@@ -495,15 +495,15 @@ body {
 }
 
 .config-field-label {
-  font-weight: 650;
-  font-size: 0.9rem;
-  color: var(--ink);
+  font-weight: 500;
+  font-size: 0.86rem;
+  color: #57534e;
 }
 
 .config-field-help {
-  color: #a8a29e;
+  color: #78716c;
   font-size: 0.8rem;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .config-field-error {

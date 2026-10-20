@@ -143,22 +143,22 @@
       fields: [
         {
           id: "jira_apikey_path",
-          label: "Jira token file",
-          help: "Path to the Jira token file. Status only - do not paste the token here.",
+          label: "Jira API token file",
+          help: "Used by Jira skills (brief, inbox, status, RFEs, and similar) to call Red Hat Jira. Path to the token file only - never paste the token here.",
           kind: "file",
           optional: true,
         },
         {
           id: "rh_offline_token_path",
-          label: "RH offline token file",
-          help: "Path to the Red Hat offline token file. Status only - do not paste the token here.",
+          label: "Red Hat Case Management offline token",
+          help: "Used by Red Hat support-case skills to authenticate to the Case Management API. Path to the offline-token file only - never paste the token here.",
           kind: "file",
           optional: true,
         },
         {
           id: "rh_offline_token_plain_path",
-          label: "RH plain-KEY token file",
-          help: "Path to a plain-KEY copy if you use one. Status only.",
+          label: "Red Hat offline token (plain KEY file)",
+          help: "Optional second file some setups use with a bare KEY=… line for the same Case Management access. Leave empty if you only keep the main offline-token file. Path only - never paste the token here.",
           kind: "file",
           optional: true,
         },
@@ -533,9 +533,9 @@
     agents_skills_dir:
       "Add-on skills folder (for example gws). Names here also count as Tailwind.",
     tailwind_dir: "Folder for the Tailwind config tab.",
-    jira_apikey_path: "Jira token file (status only, not the secret).",
-    rh_offline_token_path: "Red Hat offline token file (status only).",
-    rh_offline_token_plain_path: "Plain-KEY token file if you use one (status only).",
+    jira_apikey_path: "Jira API token file for Jira skills (status only).",
+    rh_offline_token_path: "Case Management offline token for support-case skills (status only).",
+    rh_offline_token_plain_path: "Optional plain-KEY copy of that Case Management token (status only).",
   };
 
   function fileHref(absPath) {
