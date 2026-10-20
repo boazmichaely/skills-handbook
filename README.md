@@ -30,9 +30,8 @@ Then open http://127.0.0.1:9000 instead.
 
 - `./serve.sh` rebuilds the catalog from disk, then serves the UI (localhost only).
 - After skill or rule changes on disk: restart `./serve.sh`, then hard-refresh.
-- **Settings** (gear): path findings and **# skills** counts. **Edit configuration** edits `handbook.json` in a form. Gray fields are unchanged defaults (the app does not check that those paths exist until you edit them). Paths only - never paste secrets.
+- **Settings** (gear): lists the folders where skills are expected. **Edit configuration** edits the config file (`handbook.json`).
 - Source and category filters are multi-select; **All** clears that group.
-- `dist/skills.json` is generated locally and gitignored. Do not commit it.
 
 ## Usage
 
