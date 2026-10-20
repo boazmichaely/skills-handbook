@@ -1,9 +1,9 @@
-# My Skills Handbook  
+# My Skills Handbook
 
-Validate your Tailwind configuation and explore inherited and personal Cursor and Claude skills and rules.
-
+Validate your Tailwind configuration and explore Cursor and Claude skills and rules - both the ones you inherit from Tailwind and your own personal ones.
 
 ## Prerequisites
+
 Python 3.10+ (stdlib only).
 
 ## Installation
@@ -27,6 +27,7 @@ PORT=9000 ./serve.sh
 Then open http://127.0.0.1:9000 instead.
 
 ## Upgrade
+
 If you already cloned this repo:
 
 ```bash
@@ -38,14 +39,14 @@ git pull
 
 Hard-refresh the browser (Cmd+Shift+R).
 
-Your local `handbook.json` is not in git and is not overwritten by `git pull`. 
+Your local `handbook.json` is not in git and is not overwritten by `git pull`.
 After an upgrade, skim `handbook.example.json` once in case new keys were added; copy any new keys you need into your `handbook.json` (or set them in **Edit configuration**).
 
 ## Day to day
 
 - `./serve.sh` rebuilds the catalog from disk, then serves the UI (localhost only).
-- After skill/rule changes on disk: restart `./serve.sh`, then hard-refresh.
-- **Settings** (gear): path findings and **# skills** counts. **Edit configuration** edits `handbook.json` in a form. Gray fields are unchanged defaults (not existence-checked until you edit them). Paths only - never paste secrets.
+- After skill or rule changes on disk: restart `./serve.sh`, then hard-refresh.
+- **Settings** (gear): path findings and **# skills** counts. **Edit configuration** edits `handbook.json` in a form. Gray fields are unchanged defaults (the app does not check that those paths exist until you edit them). Paths only - never paste secrets.
 - Source and category filters are multi-select; **All** clears that group.
 - `dist/skills.json` is generated locally and gitignored. Do not commit it.
 
@@ -74,22 +75,22 @@ Typical defaults are in `handbook.example.json` (for example `~/.cursor/skills`,
 
 ### Personal vs Tailwind
 
-Computed from folders - you do not list every skill.
+The **Personal** / **Tailwind** tags come from the folders above. You do not list every skill by hand.
 
 | Signal | Tag |
 | --- | --- |
-| Name under `personal_skills_dir` | **Personal** (wins if also elsewhere) |
-| Name under pack dir or `agents_skills_dir` | **Tailwind** |
-| Else, if any Tailwind folder has skills | **Personal** |
+| Name under `personal_skills_dir` | **Personal** (wins if the name also appears elsewhere) |
+| Name under the pack dir or `agents_skills_dir` | **Tailwind** |
+| Anything else, when any Tailwind folder above has skills | **Personal** |
 | No personal dir and no Tailwind signals | **Tailwind** |
 
 ## For AI agents installing for someone
 
-1. Clone (or `git pull` if present) into a normal projects folder - not inside another skills repo.
-2. Ensure `handbook.json` exists; set paths for **this** user (ask if unknown).
-3. `python3 --version` → 3.10+.
-4. `./serve.sh` → give them http://127.0.0.1:8765
-5. Check **Settings** for **found** and expected **# skills**.
+1. Clone this repo (or run `git pull` if it already exists) into a normal projects folder - not inside another skills repo.
+2. Ensure `handbook.json` exists; set every path for **this** user (ask when a path is unknown).
+3. Confirm Python 3.10+ with `python3 --version`.
+4. Start with `./serve.sh` and give them the URL (`http://127.0.0.1:8765` unless `PORT` was set).
+5. Open **Settings** and confirm paths show **found** with the expected **# skills**.
 
 Do not commit secrets or `dist/skills.json`.
 
@@ -100,16 +101,16 @@ Open **Settings** (gear) first. Check **Suspicious** and the paths table: **Stat
 | What you see | Likely cause | What to do |
 | --- | --- | --- |
 | Cursor → Skills is empty or almost empty | `cursor.skills_dir` points at the wrong folder | Set it to your real Cursor skills directory (often `~/.cursor/skills`), then save or restart `./serve.sh` |
-| Claude → Skills is empty (or the reverse of Cursor) | That runtime’s `skills_dir` is wrong, or you simply have no skills there | Check `claude.skills_dir` / `cursor.skills_dir` separately in Settings; empty can be normal |
-| Claude → Rules missing expected files | `claude.rules_dir` or `claude.claude_md_path` wrong or unused | Fix the path, or set `""` if you do not use that file/folder |
-| Only a handful of skills marked Tailwind (often gws-related) | Full pack path missing; only `agents_skills_dir` has skills | Confirm the pack folder exists (default under `…/.lola/modules/tailwind/skills`). Set `tailwind_module_skills_dir` or reinstall/sync the Tailwind pack into the Cursor skills tree |
-| Everything tagged Personal or Tailwind incorrectly | `personal_skills_dir`, pack path, and/or `agents_skills_dir` do not match this machine | Fix those three keys; restart `./serve.sh` and hard-refresh |
-| Settings says `handbook.json` is missing | Only the example file is in use | `cp handbook.example.json handbook.json` and edit for this machine |
-| Path shows **missing** | Nothing on disk at that location | Create the folder/file, install the product that owns it, or correct the path |
-| Tailwind config tab empty | `tailwind_dir` wrong, or you do not use Tailwind config here | Point it at `~/.config/tailwind`, or ignore an empty tab |
-| Jira / Case Management config row looks wrong | Token **file** path wrong (the UI never shows the secret) | Fix `jira_apikey_path` or the `rh_offline_token_*` paths; do not paste tokens into `handbook.json` |
-| UI did not change after editing paths or skills on disk | Catalog not rebuilt, or browser cache | Use **Edit configuration → Save and refresh catalog**, or stop and rerun `./serve.sh`, then hard-refresh (Cmd+Shift+R) |
-| Edit configuration cannot load or save | App was not started with `./serve.sh` | Stop any plain static file server; run `./serve.sh` so the localhost API is available |
-| Port already in use / page will not open on 8765 | Another process is using that port | `PORT=9000 ./serve.sh` (or another free port) and open that URL |
+| Claude → Skills is empty (or Cursor is empty while Claude is not) | That runtime’s `skills_dir` is wrong, or there are simply no skills there | Check `claude.skills_dir` and `cursor.skills_dir` separately in Settings; empty can be normal |
+| Claude → Rules is missing expected files | `claude.rules_dir` or `claude.claude_md_path` is wrong or unused | Fix the path, or set `""` if you do not use that file or folder |
+| Only a handful of skills marked Tailwind (often gws-related) | The full pack path is missing; only `agents_skills_dir` has skills | Confirm the pack folder exists (default under `…/.lola/modules/tailwind/skills`). Set `tailwind_module_skills_dir`, or reinstall/sync the Tailwind pack into the Cursor skills tree |
+| Everything tagged Personal or Tailwind incorrectly | `personal_skills_dir`, the pack path, and/or `agents_skills_dir` do not match this machine | Fix those three keys; restart `./serve.sh` and hard-refresh |
+| Settings says `handbook.json` is missing | Only the example file is in use | Run `cp handbook.example.json handbook.json` and edit it for this machine |
+| Path shows **missing** | Nothing on disk at that location | Create the folder or file, install the product that owns it, or correct the path |
+| Tailwind config tab is empty | `tailwind_dir` is wrong, or you do not use Tailwind config here | Point it at `~/.config/tailwind`, or ignore an empty tab |
+| Jira or Case Management config row looks wrong | The token **file** path is wrong (the UI never shows the secret) | Fix `jira_apikey_path` or the `rh_offline_token_*` paths; do not paste tokens into `handbook.json` |
+| UI did not change after editing paths or skills on disk | Catalog was not rebuilt, or the browser is cached | Use **Edit configuration → Save and refresh catalog**, or stop and rerun `./serve.sh`, then hard-refresh (Cmd+Shift+R) |
+| Edit configuration cannot load or save | The app was not started with `./serve.sh` | Stop any plain static file server; run `./serve.sh` so the localhost API is available |
+| Port already in use, or the page will not open on 8765 | Another process is using that port | Run `PORT=9000 ./serve.sh` (or another free port) and open that URL |
 
 When origin tags still look wrong, compare **# skills** for `cursor.skills_dir`, the Tailwind pack path, and `agents_skills_dir`. If the pack count is near zero while agents is not, the pack path is the problem.
