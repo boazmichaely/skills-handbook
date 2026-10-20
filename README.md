@@ -42,7 +42,19 @@ From there, **View full SKILL.md** opens the underlying skill file in the same p
 
 ![Full SKILL.md view](docs/skill-full-md.jpg)
 
-Rules and Tailwind config rows expand the same way (config shows path and value detail instead of a SKILL.md). The gear opens **Settings**, where you can review paths and use **Edit configuration** to change `handbook.json`.
+Rules and Tailwind config rows expand the same way (config shows path and value detail instead of a SKILL.md).
+
+**Settings** (gear, top right) is where you diagnose paths. Open it when a tab looks empty or Personal / Tailwind tagging looks wrong.
+
+![Settings control](docs/settings-entry.jpg)
+
+The panel lists every key from `handbook.json`: whether the path was **found** or **missing**, how many skills sit there (**# skills**), and the resolved location. **Suspicious** calls out origin or path problems when something looks off.
+
+![Settings panel](docs/settings-panel.png)
+
+**Edit configuration** opens a form for those same paths (the `handbook.json` file path is shown at the top). Gray fields are unchanged defaults - the app does not require those folders to exist until you edit them. Change a path, leave the field to validate it, then **Save and refresh catalog** (only works when you started with `./serve.sh`). Paths only - never paste secrets into the form.
+
+![Edit configuration](docs/edit-configuration.jpg)
 
 ## Upgrade
 
