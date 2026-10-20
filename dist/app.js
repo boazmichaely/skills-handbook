@@ -319,24 +319,25 @@
 
   function renderCatFilters() {
     const selected = state.selectedCategories;
-    const chips = [
-      `<span class="filter-label" title="Filter by category (multi-select)">
-        <svg class="filter-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+    const parts = [
+      `<span class="filter-label" title="Filter by category (multi-select)" aria-hidden="true">
+        <svg class="filter-icon" viewBox="0 0 16 16" width="14" height="14">
           <path fill="currentColor" d="M1.5 2.5h13l-5 5.5V13l-3 1.5V8L1.5 2.5z"/>
         </svg>
       </span>`,
-      `<div class="filters cats">`,
-      `<button type="button" data-cat="all" class="${selected.length === 0 ? "active" : ""}">All categories</button>`,
+      `<button type="button" data-cat="all" class="${
+        selected.length === 0 ? "active" : ""
+      }">All</button>`,
     ];
     for (const c of state.categories) {
-      chips.push(
+      parts.push(`<span class="filter-sep" aria-hidden="true">·</span>`);
+      parts.push(
         `<button type="button" data-cat="${escapeHtml(c)}" class="${
           selected.includes(c) ? "active" : ""
         }">${escapeHtml(c)}</button>`
       );
     }
-    chips.push(`</div>`);
-    els.catFilters.innerHTML = chips.join("");
+    els.catFilters.innerHTML = parts.join("");
     els.catFilters.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const next = btn.dataset.cat;
