@@ -318,6 +318,80 @@ body {
   letter-spacing: 0;
 }
 
+.settings-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+
+.handbook-editor {
+  width: 100%;
+  min-height: 14rem;
+  max-height: 28rem;
+  resize: vertical;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fafaf9;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.handbook-editor:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.settings-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.settings-primary,
+.settings-secondary {
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.settings-primary {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.settings-primary:hover {
+  filter: brightness(0.95);
+}
+
+.settings-secondary {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.settings-secondary:hover {
+  border-color: #a8a29e;
+}
+
+#handbook-edit-status.is-error {
+  color: #9a3412;
+}
+
+#handbook-edit-status.is-ok {
+  color: var(--accent);
+}
+
 .count {
   margin: 0.2rem 0 0;
   color: var(--muted);

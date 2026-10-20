@@ -23,6 +23,7 @@
     showFullRule: false,
     openConfigId: null,
     settings: null,
+    editFlash: "",
   };
 
   const els = {
@@ -492,11 +493,19 @@
       <section>
         <h3>handbook.json</h3>
         <p class="settings-note">
-          Edit this file, restart <code>./serve.sh</code>, then hard-refresh.
-          ${s.using_example ? " Using example defaults until handbook.json exists." : ""}
+          ${s.using_example ? "Using example defaults until you save handbook.json. " : ""}
+          Paths only - never paste API keys or token contents into this file.
           If the link does not open, copy the path into your editor.
         </p>
         ${handbookLink}
+        <div class="settings-edit">
+          <textarea id="handbook-editor" class="handbook-editor" spellcheck="false" aria-label="handbook.json editor"></textarea>
+          <div class="settings-edit-actions">
+            <button type="button" id="handbook-reload" class="settings-secondary">Reload from disk</button>
+            <button type="button" id="handbook-save" class="settings-primary">Save and refresh catalog</button>
+          </div>
+          <p id="handbook-edit-status" class="settings-note" role="status"></p>
+        </div>
       </section>
       ${issuesHtml}
       <section class="settings-paths-section">
@@ -528,6 +537,99 @@
     `;
     applyColWidths();
     initSettingsColumnResize();
+    bindHandbookEditor();
+  }
+
+  function setEditStatus(msg, kind) {
+    const el = document.getElementById("handbook-edit-status");
+    if (!el) return;
+    el.textContent = msg || "";
+    el.classList.toggle("is-error", kind === "error");
+    el.classList.toggle("is-ok", kind === "ok");
+  }
+
+  async function loadHandbookEditor() {
+    const ta = document.getElementById("handbook-editor");
+    if (!ta) return;
+    setEditStatus("Loading…");
+    try {
+      const r = await fetch("/api/handbook-config", { cache: "no-store" });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "Could not load handbook.json");
+      ta.value = data.text || "";
+      if (state.editFlash) {
+        setEditStatus(state.editFlash, "ok");
+        state.editFlash = "";
+      } else {
+        setEditStatus(
+          data.using_example
+            ? "Loaded example defaults. Save to create handbook.json."
+            : "Loaded from disk.",
+          "ok"
+        );
+      }
+    } catch (err) {
+      setEditStatus(
+        String(err.message || err) +
+          " Start the app with ./serve.sh (not a plain static file server).",
+        "error"
+      );
+    }
+  }
+
+  async function saveHandbookEditor() {
+    const ta = document.getElementById("handbook-editor");
+    if (!ta) return;
+    setEditStatus("Saving…");
+    try {
+      JSON.parse(ta.value);
+    } catch (err) {
+      setEditStatus(`Invalid JSON: ${err.message || err}`, "error");
+      return;
+    }
+    try {
+      const r = await fetch("/api/handbook-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: ta.value,
+      });
+      const data = await r.json();
+      if (!r.ok || !data.ok) {
+        throw new Error(data.error || "Save failed");
+      }
+      setEditStatus("Saved. Reloading catalog…", "ok");
+      const catalog = await fetch(`skills.json?v=${Date.now()}`, { cache: "no-store" });
+      if (!catalog.ok) throw new Error("Catalog missing after save - restart ./serve.sh");
+      const payload = await catalog.json();
+      const cursor = payload.cursor || {};
+      const claude = payload.claude || {};
+      state.cursor = {
+        skills: cursor.skills || payload.skills || [],
+        rules: cursor.rules || payload.rules || [],
+      };
+      state.claude = {
+        skills: claude.skills || [],
+        rules: claude.rules || [],
+      };
+      state.config = Array.isArray(payload.config) ? payload.config : [];
+      state.categories = payload.categories || [];
+      state.generatedAt = payload.generated_at || "";
+      state.settings = payload.settings || null;
+      state.editFlash = "Saved and catalog refreshed.";
+      updateMeta();
+      setRuntime(state.runtime);
+      renderSettings();
+    } catch (err) {
+      setEditStatus(String(err.message || err), "error");
+    }
+  }
+
+  function bindHandbookEditor() {
+    const reload = document.getElementById("handbook-reload");
+    const save = document.getElementById("handbook-save");
+    if (reload) reload.addEventListener("click", () => loadHandbookEditor());
+    if (save) save.addEventListener("click", () => saveHandbookEditor());
+    loadHandbookEditor();
   }
 
   function initSettingsColumnResize() {

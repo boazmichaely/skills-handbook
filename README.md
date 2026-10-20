@@ -19,9 +19,9 @@ Open http://127.0.0.1:8765
 
 After you change `handbook.json` or add/remove skills on disk: stop the server (Ctrl-C), run `./serve.sh` again, then hard-refresh the browser.
 
-**Settings** (gear, top right) shows the `handbook.json` path, whether each configured folder exists, how many skills are in each folder (**# skills**), and warnings when something looks wrong. Fix paths in `handbook.json` on disk (or with the in-app editor when available), then restart.
+**Settings** (gear, top right) shows the `handbook.json` path, whether each configured folder exists, how many skills are in each folder (**# skills**), and warnings when something looks wrong. You can edit `handbook.json` there and click **Save and refresh catalog** (localhost only, via `./serve.sh`). Paths only - never paste secrets into that file.
 
-`dist/skills.json` is written on your machine and gitignored. Do not commit it. Put only filesystem paths in `handbook.json`, never API keys or token contents.
+`dist/skills.json` is written on your machine and gitignored. Do not commit it.
 
 ## For AI agents installing this for someone
 
@@ -32,8 +32,8 @@ Do these steps in order. Do not invent paths; ask the user when a path is unknow
 3. Set every path in `handbook.json` to **this user's** machine (tables below). Defaults with `~` are fine when they match; change `personal_skills_dir` to their personal skills repo or `""` if they have none.
 4. Confirm Python 3.10+ (`python3 --version`).
 5. Start with `./serve.sh` and give them the URL (`http://127.0.0.1:8765` unless `PORT` was set).
-6. Open **Settings** in the UI and confirm paths show **found** with expected **# skills**. Fix `handbook.json` if not.
-7. If the UI looks stale after config or skill changes: restart `./serve.sh` and hard-refresh the browser.
+6. Open **Settings** in the UI and confirm paths show **found** with expected **# skills**. Fix paths in the Settings editor or in `handbook.json`, then save / restart as needed.
+7. If the UI looks stale after skill changes on disk: restart `./serve.sh` and hard-refresh the browser.
 
 Do not commit secrets. Do not commit `dist/skills.json`.
 
@@ -128,7 +128,8 @@ Use **Settings** first. Check **Suspicious** and the paths table (**Status**, **
 | Settings warns that `handbook.json` is missing | Only `handbook.example.json` is in use | `cp handbook.example.json handbook.json` and edit |
 | Path shows **missing** | Folder or file is not on disk at that location | Create it, install the product that owns it, or correct the path |
 | Claude → Skills has items but Cursor does not (or the reverse) | Different install trees; that can be normal | Check each runtime’s `skills_dir` separately in Settings |
-| UI did not change after editing `handbook.json` | Catalog not rebuilt, or browser cache | Restart `./serve.sh`, then hard-refresh (Cmd+Shift+R / Ctrl+Shift+R) |
+| UI did not change after editing `handbook.json` | Catalog not rebuilt, or browser cache | Use **Save and refresh catalog** in Settings, or restart `./serve.sh`, then hard-refresh |
+| Settings editor cannot load or save | App was not started with `./serve.sh` | Stop any plain static server; run `./serve.sh` so the localhost save API is available |
 | Tailwind config tab empty | `tailwind_dir` wrong or unused | Point at `~/.config/tailwind` or accept an empty tab |
 | `file://` link in Settings does not open | Browser blocks local file links from `http://127.0.0.1` | Copy the path into your editor |
 
