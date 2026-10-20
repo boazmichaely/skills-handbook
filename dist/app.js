@@ -24,6 +24,8 @@
     openConfigId: null,
     settings: null,
     editBase: null,
+    editInitial: {},
+    editDirty: {},
   };
 
   const els = {
@@ -688,12 +690,38 @@
     els.editStatus.classList.toggle("is-ok", kind === "ok");
   }
 
+  function isFieldDirty(id) {
+    return Boolean(state.editDirty[id]);
+  }
+
+  function markFieldDirty(input) {
+    const id = input.dataset.configId;
+    if (!id || state.editDirty[id]) return;
+    state.editDirty[id] = true;
+    input.classList.remove("is-pristine");
+    input.classList.add("is-dirty");
+  }
+
+  function syncFieldDirtyFromValue(input) {
+    const id = input.dataset.configId;
+    if (!id || state.editDirty[id]) return;
+    const initial = state.editInitial[id] == null ? "" : String(state.editInitial[id]);
+    if (input.value.trim() !== initial.trim()) {
+      markFieldDirty(input);
+    }
+  }
+
+  function collectDirtyFieldIds() {
+    return Object.keys(state.editDirty).filter((id) => state.editDirty[id]);
+  }
+
   function renderConfigForm(values) {
     if (!els.editModalBody) return;
     const html = CONFIG_GROUPS.map((group) => {
       const fields = group.fields
         .map((field) => {
           const val = values[field.id] == null ? "" : String(values[field.id]);
+          const dirty = isFieldDirty(field.id);
           return `<label class="config-field">
             <span class="config-field-label">${escapeHtml(field.label)}</span>
             <span class="config-field-help">${escapeHtml(field.help)}</span>
@@ -701,9 +729,9 @@
               field.kind || "dir"
             )}" data-optional="${field.optional ? "1" : "0"}" value="${escapeHtml(
               val
-            )}" spellcheck="false" autocomplete="off" ${
-              field.optional ? 'placeholder="(optional)"' : ""
-            } />
+            )}" spellcheck="false" autocomplete="off" class="${
+              dirty ? "is-dirty" : "is-pristine"
+            }" ${field.optional ? 'placeholder="(optional)"' : ""} />
             <span class="config-field-error" data-error-for="${escapeHtml(field.id)}" hidden></span>
           </label>`;
         })
@@ -749,7 +777,7 @@
     els.editSave.disabled = Boolean(invalid);
   }
 
-  async function checkPathOnServer(field, value) {
+  async function checkPathOnServer(field, value, requireExists) {
     if (looksLikeSecret(value)) {
       return `${field.label}: enter a filesystem path only, not a secret value.`;
     }
@@ -761,6 +789,7 @@
           path: value,
           kind: field.kind || "dir",
           optional: Boolean(field.optional),
+          require_exists: Boolean(requireExists),
           label: field.label,
         }),
       });
@@ -785,7 +814,8 @@
     const field = fieldById(input.dataset.configId);
     if (!field) return true;
     const value = input.value.trim();
-    const err = await checkPathOnServer(field, value);
+    const requireExists = isFieldDirty(field.id);
+    const err = await checkPathOnServer(field, value, requireExists);
     setFieldError(input, err);
     updateSaveEnabled();
     return !err;
@@ -798,6 +828,7 @@
         validateConfigInput(input);
       });
       input.addEventListener("input", () => {
+        syncFieldDirtyFromValue(input);
         if (input.classList.contains("is-invalid")) {
           setFieldError(input, "");
           updateSaveEnabled();
@@ -810,7 +841,8 @@
     for (const group of CONFIG_GROUPS) {
       for (const field of group.fields) {
         const val = values[field.id] == null ? "" : String(values[field.id]);
-        const err = await checkPathOnServer(field, val);
+        const requireExists = isFieldDirty(field.id);
+        const err = await checkPathOnServer(field, val, requireExists);
         if (err) {
           const input =
             els.editModal &&
@@ -858,6 +890,7 @@
       }
       if (!parsed || typeof parsed !== "object") parsed = {};
       state.editBase = parsed;
+      state.editDirty = {};
       const values = {};
       for (const group of CONFIG_GROUPS) {
         for (const field of group.fields) {
@@ -865,6 +898,7 @@
           values[field.id] = v == null ? "" : String(v);
         }
       }
+      state.editInitial = { ...values };
       renderConfigForm(values);
       setEditStatus(
         data.using_example
@@ -872,9 +906,9 @@
           : "Loaded from disk.",
         "ok"
       );
-      const first = els.editModal && els.editModal.querySelector("input");
-      if (first) first.focus();
     } catch (err) {
+      state.editInitial = {};
+      state.editDirty = {};
       renderConfigForm({});
       setEditStatus(
         String(err.message || err) + " Start the app with ./serve.sh.",
@@ -893,6 +927,8 @@
       els.editBackdrop.classList.add("hidden");
     }
     state.editBase = null;
+    state.editInitial = {};
+    state.editDirty = {};
     setEditStatus("");
   }
 
@@ -905,6 +941,7 @@
       return;
     }
     const payload = buildConfigObject(state.editBase || {}, values);
+    payload._dirty_fields = collectDirtyFieldIds();
     setEditStatus("Saving…");
     try {
       const r = await fetch("/api/handbook-config", {

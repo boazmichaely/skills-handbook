@@ -61,6 +61,7 @@ def _check_path_value(
     *,
     kind: str,
     optional: bool,
+    require_exists: bool = True,
 ) -> str | None:
     if value is None:
         value = ""
@@ -68,13 +69,15 @@ def _check_path_value(
         return f"{label} must be a string path."
     text = value.strip()
     if not text:
-        if optional:
+        if optional or not require_exists:
             return None
         return f"{label} is required."
     if _SECRETISH.search(text) or (
         len(text) > 200 and "/" not in text and "\\" not in text and not text.startswith("~")
     ):
         return f"{label} looks like a secret value. Put a filesystem path only."
+    if not require_exists:
+        return None
     resolved = _expand_path(text)
     if kind == "file":
         if not resolved.is_file():
@@ -85,16 +88,7 @@ def _check_path_value(
     return None
 
 
-def _validate_config(data: object) -> str | None:
-    if not isinstance(data, dict):
-        return "handbook.json must be a JSON object."
-    cursor = data.get("cursor")
-    if cursor is not None and not isinstance(cursor, dict):
-        return '"cursor" must be an object.'
-    claude = data.get("claude")
-    if claude is not None and not isinstance(claude, dict):
-        return '"claude" must be an object.'
-
+def _config_path_checks(data: dict) -> list[tuple[str, object, str, bool]]:
     checks: list[tuple[str, object, str, bool]] = [
         ("personal_skills_dir", data.get("personal_skills_dir"), "dir", True),
         ("tailwind_dir", data.get("tailwind_dir"), "dir", False),
@@ -104,6 +98,7 @@ def _validate_config(data: object) -> str | None:
         ("rh_offline_token_path", data.get("rh_offline_token_path"), "file", True),
         ("rh_offline_token_plain_path", data.get("rh_offline_token_plain_path"), "file", True),
     ]
+    cursor = data.get("cursor")
     if isinstance(cursor, dict):
         checks.extend(
             [
@@ -111,6 +106,7 @@ def _validate_config(data: object) -> str | None:
                 ("cursor.rules_dir", cursor.get("rules_dir"), "dir", False),
             ]
         )
+    claude = data.get("claude")
     if isinstance(claude, dict):
         checks.extend(
             [
@@ -119,8 +115,28 @@ def _validate_config(data: object) -> str | None:
                 ("claude.claude_md_path", claude.get("claude_md_path"), "file", True),
             ]
         )
-    for label, value, kind, optional in checks:
-        err = _check_path_value(label, value, kind=kind, optional=optional)
+    return checks
+
+
+def _validate_config(data: object, dirty_fields: set[str] | None = None) -> str | None:
+    if not isinstance(data, dict):
+        return "handbook.json must be a JSON object."
+    cursor = data.get("cursor")
+    if cursor is not None and not isinstance(cursor, dict):
+        return '"cursor" must be an object.'
+    claude = data.get("claude")
+    if claude is not None and not isinstance(claude, dict):
+        return '"claude" must be an object.'
+
+    for label, value, kind, optional in _config_path_checks(data):
+        require_exists = dirty_fields is None or label in dirty_fields
+        err = _check_path_value(
+            label,
+            value,
+            kind=kind,
+            optional=optional,
+            require_exists=require_exists,
+        )
         if err:
             return err
     return None
@@ -132,13 +148,20 @@ def _check_path_request(payload: object) -> dict:
     raw = payload.get("path")
     kind = str(payload.get("kind") or "dir").lower()
     optional = bool(payload.get("optional"))
+    require_exists = bool(payload.get("require_exists", True))
     label = str(payload.get("label") or "Path")
     if kind not in ("dir", "file"):
         return {"ok": False, "error": 'kind must be "dir" or "file".'}
     if raw is not None and not isinstance(raw, str):
         return {"ok": False, "error": "path must be a string."}
     text = "" if raw is None else raw.strip()
-    err = _check_path_value(label, text, kind=kind, optional=optional)
+    err = _check_path_value(
+        label,
+        text,
+        kind=kind,
+        optional=optional,
+        require_exists=require_exists,
+    )
     resolved = str(_expand_path(text)) if text else ""
     if err:
         return {
@@ -224,7 +247,20 @@ class HandbookHandler(SimpleHTTPRequestHandler):
             self._send_json(HTTPStatus.OK, _check_path_request(data))
             return
 
-        err = _validate_config(data)
+        dirty_raw = data.pop("_dirty_fields", None) if isinstance(data, dict) else None
+        dirty_fields: set[str] | None
+        if dirty_raw is None:
+            dirty_fields = None
+        elif isinstance(dirty_raw, list) and all(isinstance(x, str) for x in dirty_raw):
+            dirty_fields = set(dirty_raw)
+        else:
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": '"_dirty_fields" must be an array of strings.'},
+            )
+            return
+
+        err = _validate_config(data, dirty_fields=dirty_fields)
         if err:
             self._send_json(
                 HTTPStatus.BAD_REQUEST,

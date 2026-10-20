@@ -523,9 +523,20 @@ body {
   font-size: 0.84rem;
 }
 
+.config-field input.is-pristine {
+  color: #a8a29e;
+  background: #fafaf9;
+}
+
+.config-field input.is-dirty {
+  color: var(--ink);
+  background: #fff;
+}
+
 .config-field input:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+  color: var(--ink);
 }
 
 .config-field input.is-invalid {
