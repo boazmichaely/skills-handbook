@@ -11,8 +11,8 @@ Python 3.10+ (stdlib only).
 ```bash
 git clone https://github.com/boazmichaely/skills-handbook.git
 cd skills-handbook
-cp handbook.example.json handbook.json
-# edit handbook.json for this machine (or use Settings → Edit configuration after start)
+# handbook.json ships with the same defaults as handbook.example.json
+# edit it for this machine, or use Settings → Edit configuration after start
 ./serve.sh
 ```
 
@@ -78,12 +78,11 @@ Hard-refresh the browser (Cmd+Shift+R).
 
 `git pull` does not throw away your local `handbook.json` edits. After an upgrade, skim `handbook.example.json` once in case new keys were added; copy any new keys you need into your `handbook.json` (or set them in **Edit configuration**).
 
-
 ## `handbook.json`
 
 This file tells the handbook where to look on **your** computer. It is a list of folders and token-file paths - not the secrets themselves. If a path is wrong, a tab can look empty, filters can tag skills incorrectly, or Settings will show **missing**.
 
-Start from `handbook.example.json` (the install step copies it to `handbook.json`). You can edit the file in a text editor, or use **Settings → Edit configuration** in the UI. Use `~` for your home directory; it expands when the handbook starts.
+The repo includes `handbook.json` with the same defaults as `handbook.example.json`. Edit `handbook.json` in a text editor, or use **Settings → Edit configuration** in the UI. If you delete `handbook.json`, copy it back from the example. Use `~` for your home directory; it expands when the handbook starts.
 
 | Key | What it points at |
 | --- | --- |
@@ -116,7 +115,7 @@ The **Personal** / **Tailwind** tags come from the folders above. You do not lis
 ## For AI agents installing for someone
 
 1. Clone this repo (or run `git pull` if it already exists) into a normal projects folder - not inside another skills repo.
-2. Ensure `handbook.json` exists; set every path for **this** user (ask when a path is unknown).
+2. Edit `handbook.json` (already in the repo) so every path matches **this** user (ask when a path is unknown). If the file is missing, copy `handbook.example.json` to `handbook.json` first.
 3. Confirm Python 3.10+ with `python3 --version`.
 4. Start with `./serve.sh` and give them the URL (`http://127.0.0.1:8765` unless `PORT` was set).
 5. Open **Settings** and confirm paths show **found** with the expected **# skills**.

@@ -3,6 +3,7 @@ dist/skills.json
 
 __pycache__/
 *.pyc
+.DS_Store
 
 # Optional machine-local overrides (paths only; prefer committing handbook.json with ~ defaults).
 # handbook.json
