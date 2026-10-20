@@ -1168,7 +1168,7 @@ body.col-resizing {
   .dep-grid { grid-template-columns: 1fr; }
   .expand { margin-left: 0.35rem; margin-right: 0.35rem; }
   .toolbar { flex-direction: column; align-items: stretch; }
-  .filter-links.origin { width: 100%; }
+  .toolbar .filter-group.origin { width: 100%; }
   table.resizable { min-width: 100%; font-size: 0.9rem; }
   .name-cell .id { display: none; }
 }
