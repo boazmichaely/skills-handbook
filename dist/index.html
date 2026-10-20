@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>My Skills Handbook</title>
-  <link rel="stylesheet" href="styles.css?v=form-edit16" />
+  <link rel="stylesheet" href="styles.css?v=form-edit22" />
 </head>
 <body>
   <div id="app">
@@ -78,7 +78,7 @@
             <button type="button" data-origin="tailwind">Tailwind</button>
           </div>
         </div>
-        <div id="cat-filters" class="filter-group cats" role="group" aria-label="Category filter"></div>
+        <div id="cat-filters" class="filter-group cats" role="group" aria-label="Category filter (multi-select)"></div>
         <div id="count" class="count"></div>
         <div class="table-wrap">
           <table id="skills-table" class="resizable">
@@ -129,7 +129,7 @@
     <section id="config-view" class="view hidden">
       <div class="toolbar">
         <input id="config-search" type="search" placeholder="Search config name, value, path…" autocomplete="off" />
-        <div class="filters origin" id="config-source-filters" role="group" aria-label="Config source filter"></div>
+        <div class="filter-links origin" id="config-source-filters" role="group" aria-label="Config source filter (multi-select)"></div>
       </div>
       <div id="config-count" class="count"></div>
       <div class="table-wrap">
@@ -153,6 +153,6 @@
   </div>
 
   <script src="vendor/marked.min.js"></script>
-  <script src="app.js?v=form-edit21"></script>
+  <script src="app.js?v=form-edit22"></script>
 </body>
 </html>

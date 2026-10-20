@@ -763,11 +763,17 @@ body {
   background: rgba(28, 25, 23, 0.03);
 }
 
+.filters button.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 650;
+}
+
 .filters.cats button.active {
   background: var(--cat-soft);
   border-color: var(--cat);
   color: var(--cat);
-  font-weight: 650;
 }
 
 .view {

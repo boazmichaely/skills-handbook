@@ -457,19 +457,25 @@
     if (!els.configSourceFilters) return;
     const sources = configSources();
     const selected = state.configSourcesSelected;
-    const chips = [
+    const parts = [
+      `<span class="filter-label" title="Filter by source (multi-select)" aria-hidden="true">
+        <svg class="filter-icon" viewBox="0 0 16 16" width="14" height="14">
+          <path fill="currentColor" d="M1.5 2.5h13l-5 5.5V13l-3 1.5V8L1.5 2.5z"/>
+        </svg>
+      </span>`,
       `<button type="button" data-config-source="all" class="${
         selected.length === 0 ? "active" : ""
-      }">All sources</button>`,
+      }">All</button>`,
     ];
     for (const s of sources) {
-      chips.push(
+      parts.push(`<span class="filter-sep" aria-hidden="true">·</span>`);
+      parts.push(
         `<button type="button" data-config-source="${escapeHtml(s)}" class="${
           selected.includes(s) ? "active" : ""
         }">${escapeHtml(s)}</button>`
       );
     }
-    els.configSourceFilters.innerHTML = chips.join("");
+    els.configSourceFilters.innerHTML = parts.join("");
     els.configSourceFilters.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const next = btn.dataset.configSource;
