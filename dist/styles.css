@@ -469,7 +469,7 @@ body {
   color: #a8a29e;
 }
 
-.edit-file-link {
+.edit-file-value {
   flex: 1 1 12rem;
   min-width: 0;
   color: #44403c;
@@ -478,9 +478,7 @@ body {
   font-weight: 600;
   line-height: 1.35;
   word-break: break-all;
-  text-decoration: none;
-  cursor: default;
-  pointer-events: none;
+  user-select: text;
 }
 
 .edit-modal-body {

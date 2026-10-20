@@ -879,9 +879,7 @@
     const label = usingExample ? "Will create" : "File";
     els.editFilePath.innerHTML = `<span class="edit-file-label">${escapeHtml(
       label
-    )}</span><a class="edit-file-link" href="${escapeHtml(
-      fileHref(absPath)
-    )}">${escapeHtml(absPath)}</a>`;
+    )}</span><span class="edit-file-value">${escapeHtml(absPath)}</span>`;
     els.editFilePath.hidden = false;
   }
 
