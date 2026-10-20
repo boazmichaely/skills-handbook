@@ -2,7 +2,7 @@
 
 Browse local Cursor and Claude skills/rules, plus Tailwind config (paths and status only - never raw secrets).
 
-## Install
+## Install and run
 
 Needs Python 3.10+ (stdlib only).
 
@@ -10,35 +10,35 @@ Needs Python 3.10+ (stdlib only).
 git clone https://github.com/boazmichaely/skills-handbook.git
 cd skills-handbook
 cp handbook.example.json handbook.json
-```
-
-Then edit `handbook.json` (see below). That file is how this tool finds *your* skills, rules, and config. Wrong paths = empty tabs or the wrong tree.
-
-## Run
-
-```bash
+# edit handbook.json - see below
 ./serve.sh
 ```
 
 Open http://127.0.0.1:8765  
 (`PORT=9000 ./serve.sh` for another port.)
 
-`./serve.sh` always runs `generate.py` first (reads `handbook.json`, writes `dist/skills.json`), then starts the local web server. You do **not** need to run `generate.py` yourself for normal use.
+After you change `handbook.json` or install/remove skills on disk: stop the server (Ctrl-C), run `./serve.sh` again, then hard-refresh the browser.
 
-Use `python3 generate.py` alone only if the server is already running and you want to refresh the catalog without stopping it - then hard-refresh the browser.
+`dist/skills.json` is written on your machine and gitignored. Do not commit it. Put only filesystem paths in `handbook.json`, never API keys or token contents.
 
-`dist/skills.json` is generated on your machine and gitignored - do not commit it. Put only filesystem paths in `handbook.json`, never API keys or token contents.
+## For AI agents installing this for someone
+
+Do these steps in order. Do not invent paths; ask the user when a path is unknown.
+
+1. Clone this repo (or `git pull` if it already exists) into a normal projects folder.
+2. Ensure `handbook.json` exists (`cp handbook.example.json handbook.json` if missing).
+3. Set every path in `handbook.json` to **this user's** machine (table below). Defaults with `~` are fine when they match; change `personal_skills_dir` to their personal skills repo or `""` if they have none.
+4. Confirm Python 3.10+ is available (`python3 --version`).
+5. Start with `./serve.sh` and tell the user the URL (`http://127.0.0.1:8765` unless `PORT` was set).
+6. If the UI looks stale after config or skill changes: restart `./serve.sh` and hard-refresh the browser.
+
+Do not commit secrets. Do not commit `dist/skills.json`.
 
 ## Personalize `handbook.json`
 
-Copy from `handbook.example.json`. Use `~` for your home directory; it expands when the catalog is built.
+This file is how the handbook finds skills, rules, and Tailwind config on **this** machine. Wrong paths = empty tabs or the wrong tree.
 
-After you edit `handbook.json` (or add/remove skills on disk), the UI will not update until a new catalog is built:
-
-1. Stop the server if it is running (Ctrl-C), then run `./serve.sh` again, **or**
-2. With the server still up, run `python3 generate.py` in another terminal.
-
-Then hard-refresh the browser (Cmd+Shift+R / Ctrl+Shift+R).
+Copy from `handbook.example.json`. Use `~` for the home directory; it expands when the handbook starts.
 
 ### What each key does
 
@@ -66,7 +66,7 @@ Then hard-refresh the browser (Cmd+Shift+R / Ctrl+Shift+R).
 | `claude.skills_dir` | `~/.claude/skills` |
 | `claude.rules_dir` | `~/.claude/rules` |
 | `claude.claude_md_path` | `~/.claude/CLAUDE.md` |
-| `personal_skills_dir` | `~/Projects/my-cursor-skills` (change this to *your* personal skills repo, or `""` if you do not have one) |
+| `personal_skills_dir` | `~/Projects/my-cursor-skills` (change this to *their* personal skills repo, or `""` if they do not have one) |
 | `tailwind_dir` | `~/.config/tailwind` |
 | `tailwind_module_skills_dir` | `""` (auto) |
 | `agents_skills_dir` | `~/.agents/skills` |
@@ -74,11 +74,11 @@ Then hard-refresh the browser (Cmd+Shift+R / Ctrl+Shift+R).
 | `rh_offline_token_path` | `~/code/.rh-offline-token` |
 | `rh_offline_token_plain_path` | `~/code/.rh-offline-token.plain` |
 
-On Windows, keep the same keys and set full paths (or `~` if your environment expands it the way Python’s `Path.expanduser` expects).
+On Windows, keep the same keys and set full paths (or `~` if the environment expands it the way Python’s `Path.expanduser` expects).
 
 ### How Personal vs Tailwind is decided
 
-The UI filter **All / Personal / Tailwind** is not a separate install. It is computed from `handbook.json`:
+The filter **All / Personal / Tailwind** is computed from these directories:
 
 | Signal | Meaning |
 | --- | --- |
@@ -88,11 +88,9 @@ The UI filter **All / Personal / Tailwind** is not a separate install. It is com
 | Everything else, when any Tailwind signal exists | **Personal** |
 | No personal dir and no Tailwind signals | Treated as **Tailwind** (nothing to compare against) |
 
-You do not list every skill by hand. Point the directories correctly; the generator discovers folders that contain `SKILL.md`.
+You do not list every skill by hand. Point the directories correctly; the handbook discovers folders that contain `SKILL.md`.
 
 ### Minimal example
-
-Cursor + Claude defaults, your personal skills repo, Tailwind config in the usual place:
 
 ```json
 {
@@ -115,4 +113,4 @@ Cursor + Claude defaults, your personal skills repo, Tailwind config in the usua
 }
 ```
 
-If you do not use Claude, leave the `claude` paths as defaults (empty tabs are fine). If you do not use Tailwind, set `tailwind_dir` to wherever your config lives, or accept an empty Tailwind config tab. If you have no personal skills repo, set `"personal_skills_dir": ""` and rely on Lola / `agents_skills_dir` for origin tagging.
+If Claude is unused, leave the `claude` paths as defaults (empty tabs are fine). If Tailwind is unused, the Tailwind config tab may be empty. If there is no personal skills repo, set `"personal_skills_dir": ""`.
