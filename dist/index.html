@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>My Skills Handbook</title>
-  <link rel="stylesheet" href="styles.css?v=form-edit23" />
+  <link rel="stylesheet" href="styles.css?v=form-edit24" />
 </head>
 <body>
   <div id="app">
@@ -65,20 +65,20 @@
       <section id="skills-view" class="view">
         <div class="toolbar">
           <input id="search" type="search" placeholder="Search name, category, description, MCP…" autocomplete="off" />
-          <div class="filter-links origin" role="group" aria-label="Filter by source (multi-select)">
+          <div class="filter-group origin" role="group" aria-label="Filter by source (multi-select)">
             <span class="filter-label" title="Filter by source (multi-select)" aria-hidden="true">
               <svg class="filter-icon" viewBox="0 0 16 16" width="14" height="14">
                 <path fill="currentColor" d="M1.5 2.5h13l-5 5.5V13l-3 1.5V8L1.5 2.5z"/>
               </svg>
             </span>
-            <button type="button" data-origin="all" class="active">All</button>
-            <span class="filter-sep" aria-hidden="true">·</span>
-            <button type="button" data-origin="personal">Personal</button>
-            <span class="filter-sep" aria-hidden="true">·</span>
-            <button type="button" data-origin="tailwind">Tailwind</button>
+            <div class="filters origin" id="origin-filters">
+              <button type="button" data-origin="all" class="active">All</button>
+              <button type="button" data-origin="personal">Personal</button>
+              <button type="button" data-origin="tailwind">Tailwind</button>
+            </div>
           </div>
         </div>
-        <div id="cat-filters" class="filter-links cats" role="group" aria-label="Category filter (multi-select)"></div>
+        <div id="cat-filters" class="filter-group cats" role="group" aria-label="Category filter (multi-select)"></div>
         <div id="count" class="count"></div>
         <div class="table-wrap">
           <table id="skills-table" class="resizable">
@@ -129,7 +129,14 @@
     <section id="config-view" class="view hidden">
       <div class="toolbar">
         <input id="config-search" type="search" placeholder="Search config name, value, path…" autocomplete="off" />
-        <div class="filter-links origin" id="config-source-filters" role="group" aria-label="Config source filter (multi-select)"></div>
+        <div class="filter-group origin" role="group" aria-label="Config source filter (multi-select)">
+          <span class="filter-label" title="Filter by source (multi-select)" aria-hidden="true">
+            <svg class="filter-icon" viewBox="0 0 16 16" width="14" height="14">
+              <path fill="currentColor" d="M1.5 2.5h13l-5 5.5V13l-3 1.5V8L1.5 2.5z"/>
+            </svg>
+          </span>
+          <div class="filters origin" id="config-source-filters"></div>
+        </div>
       </div>
       <div id="config-count" class="count"></div>
       <div class="table-wrap">
@@ -153,6 +160,6 @@
   </div>
 
   <script src="vendor/marked.min.js"></script>
-  <script src="app.js?v=form-edit23"></script>
+  <script src="app.js?v=form-edit24"></script>
 </body>
 </html>

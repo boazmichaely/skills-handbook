@@ -319,25 +319,26 @@
 
   function renderCatFilters() {
     const selected = state.selectedCategories;
-    const parts = [
+    const chips = [
       `<span class="filter-label" title="Filter by category (multi-select)" aria-hidden="true">
         <svg class="filter-icon" viewBox="0 0 16 16" width="14" height="14">
           <path fill="currentColor" d="M1.5 2.5h13l-5 5.5V13l-3 1.5V8L1.5 2.5z"/>
         </svg>
       </span>`,
+      `<div class="filters cats">`,
       `<button type="button" data-cat="all" class="${
         selected.length === 0 ? "active" : ""
-      }">All</button>`,
+      }">All categories</button>`,
     ];
     for (const c of state.categories) {
-      parts.push(`<span class="filter-sep" aria-hidden="true">·</span>`);
-      parts.push(
+      chips.push(
         `<button type="button" data-cat="${escapeHtml(c)}" class="${
           selected.includes(c) ? "active" : ""
         }">${escapeHtml(c)}</button>`
       );
     }
-    els.catFilters.innerHTML = parts.join("");
+    chips.push(`</div>`);
+    els.catFilters.innerHTML = chips.join("");
     els.catFilters.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const next = btn.dataset.cat;
@@ -458,25 +459,19 @@
     if (!els.configSourceFilters) return;
     const sources = configSources();
     const selected = state.configSourcesSelected;
-    const parts = [
-      `<span class="filter-label" title="Filter by source (multi-select)" aria-hidden="true">
-        <svg class="filter-icon" viewBox="0 0 16 16" width="14" height="14">
-          <path fill="currentColor" d="M1.5 2.5h13l-5 5.5V13l-3 1.5V8L1.5 2.5z"/>
-        </svg>
-      </span>`,
+    const chips = [
       `<button type="button" data-config-source="all" class="${
         selected.length === 0 ? "active" : ""
-      }">All</button>`,
+      }">All sources</button>`,
     ];
     for (const s of sources) {
-      parts.push(`<span class="filter-sep" aria-hidden="true">·</span>`);
-      parts.push(
+      chips.push(
         `<button type="button" data-config-source="${escapeHtml(s)}" class="${
           selected.includes(s) ? "active" : ""
         }">${escapeHtml(s)}</button>`
       );
     }
-    els.configSourceFilters.innerHTML = parts.join("");
+    els.configSourceFilters.innerHTML = chips.join("");
     els.configSourceFilters.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const next = btn.dataset.configSource;
@@ -1222,14 +1217,14 @@
 
   function syncOriginFilterButtons() {
     const selected = state.origins;
-    document.querySelectorAll(".filter-links.origin button[data-origin]").forEach((b) => {
+    document.querySelectorAll("#origin-filters button[data-origin]").forEach((b) => {
       const v = b.dataset.origin;
       const on = v === "all" ? selected.length === 0 : selected.includes(v);
       b.classList.toggle("active", on);
     });
   }
 
-  document.querySelectorAll(".filter-links.origin button[data-origin]").forEach((btn) => {
+  document.querySelectorAll("#origin-filters button[data-origin]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const next = btn.dataset.origin;
       if (next === "all") state.origins = [];
