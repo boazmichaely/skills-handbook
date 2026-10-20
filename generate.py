@@ -345,18 +345,18 @@ def build_settings(
         issue(
             "warn",
             "lola_module_missing",
-            "tailwind_module_skills_dir not found "
-            f"({lola_path}). That is the Tailwind skill pack under "
-            ".lola/modules/tailwind/skills. Without it, the Personal/Tailwind filter "
-            "cannot mark the full Tailwind pack.",
+            "The full Tailwind skills pack folder is missing "
+            f"({lola_path}). In handbook.json this is tailwind_module_skills_dir. "
+            "Without it, All / Personal / Tailwind cannot mark the full Tailwind set "
+            "(you may only see add-on skills such as gws as Tailwind).",
         )
     if agents_ids and not lola_ids:
         issue(
             "warn",
             "agents_without_lola",
-            f"Found {len(agents_ids)} skills under agents_skills_dir but "
-            "tailwind_module_skills_dir has none. "
-            "The Personal/Tailwind filter may show mostly gws/agent skills as Tailwind.",
+            f"Found {len(agents_ids)} skills in agents_skills_dir, but the full "
+            "Tailwind pack folder (tailwind_module_skills_dir) has none. "
+            "All / Personal / Tailwind may show mostly gws/add-on skills as Tailwind.",
         )
     if agents_ids and claude_origin["tailwind"] and claude_origin["tailwind"] <= len(agents_ids):
         claude_tw_ids = {s["id"] for s in claude_skills if s.get("origin") == "tailwind"}
@@ -364,16 +364,16 @@ def build_settings(
             issue(
                 "warn",
                 "claude_tailwind_looks_like_gws_only",
-                "Claude skills tagged Tailwind look like the agents/gws set only. "
-                "Check cursor.skills_dir and tailwind_module_skills_dir - the full "
-                "Tailwind pack may have been installed or copied to the wrong place.",
+                "Claude skills marked Tailwind look like only the gws/add-on set. "
+                "Check that cursor.skills_dir and tailwind_module_skills_dir point at "
+                "the real Tailwind install, not a partial copy.",
             )
     if cursor_origin["total"] and cursor_origin["total"] < 10 and agents_ids:
         issue(
             "warn",
             "cursor_skills_sparse",
-            f"Only {cursor_origin['total']} Cursor skills found while agents_skills_dir has "
-            f"{len(agents_ids)}. cursor.skills_dir may point at the wrong tree.",
+            f"Only {cursor_origin['total']} Cursor skills found, but agents_skills_dir has "
+            f"{len(agents_ids)}. cursor.skills_dir may point at the wrong folder.",
         )
     if not TW_DIR.is_dir():
         issue(

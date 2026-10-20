@@ -382,12 +382,9 @@
   }
 
   function updateMeta() {
-    const c = state.cursor;
-    const cl = state.claude;
-    els.meta.textContent =
-      `Cursor ${c.skills.length} skills / ${c.rules.length} rules · ` +
-      `Claude ${cl.skills.length} skills / ${cl.rules.length} rules · ` +
-      `${state.config.length} config · generated ${state.generatedAt}`;
+    els.meta.textContent = state.generatedAt
+      ? `Last refreshed ${state.generatedAt}`
+      : "";
     const issueCount = (state.settings && state.settings.issues && state.settings.issues.length) || 0;
     if (els.settingsBtn) {
       els.settingsBtn.classList.toggle("has-issues", issueCount > 0);
@@ -399,21 +396,30 @@
   }
 
   const PATH_HELP = {
-    "cursor.skills_dir": "Cursor skills tree shown in the Cursor tab.",
-    "cursor.rules_dir": "Cursor rules shown in the Cursor tab.",
-    "claude.skills_dir": "Claude skills tree shown in the Claude tab.",
-    "claude.rules_dir": "Claude rules shown in the Claude tab.",
-    "claude.claude_md_path": "Optional Claude user memory file, listed under Claude → Rules.",
+    "cursor.skills_dir":
+      "Folder of skills shown under the Cursor tab.",
+    "cursor.rules_dir":
+      "Folder of rules shown under the Cursor tab.",
+    "claude.skills_dir":
+      "Folder of skills shown under the Claude tab.",
+    "claude.rules_dir":
+      "Folder of rules shown under the Claude tab.",
+    "claude.claude_md_path":
+      "Optional Claude memory file. If present, it appears under Claude → Rules.",
     personal_skills_dir:
-      "Your personal skills source. Skill ids here are tagged Personal in the All / Personal / Tailwind filter.",
+      "Your own skills repo or folder. Skills found here are marked Personal in the All / Personal / Tailwind filter.",
     tailwind_module_skills_dir:
-      "Tailwind skill pack installed by Lola (under .lola/modules/tailwind/skills). Skill ids here are tagged Tailwind. Not a separate UI filter - it feeds Personal / Tailwind.",
+      "Copy of the full Tailwind skills pack that the Tailwind installer leaves on disk (usually inside .lola/modules/tailwind/skills under your Cursor skills folder). The number in Skills is how many skill folders are in this path. Those names are marked Tailwind in the filter. There is no separate Lola tab or filter.",
     agents_skills_dir:
-      "Agent skills folder (gws-cli etc.). Skill ids here are also tagged Tailwind. Not a separate UI filter.",
-    tailwind_dir: "Tailwind config directory for the Tailwind config tab.",
-    jira_apikey_path: "Jira token file path (status only in Tailwind config).",
-    rh_offline_token_path: "RH offline token file path (status only).",
-    rh_offline_token_plain_path: "Plain-KEY token file path (status only).",
+      "Extra skills folder used by some Tailwind add-ons (for example Google Workspace / gws). The Skills number is how many are in this path. Those names are also marked Tailwind in the filter.",
+    tailwind_dir:
+      "Folder used by the Tailwind config tab (tailwind.json and related files).",
+    jira_apikey_path:
+      "Path to your Jira token file. Only status is shown in Tailwind config, not the secret.",
+    rh_offline_token_path:
+      "Path to your Red Hat offline token file. Only status is shown, not the secret.",
+    rh_offline_token_plain_path:
+      "Path to a plain-KEY copy of that token if you use one. Only status is shown.",
   };
 
   function fileHref(absPath) {
@@ -511,10 +517,12 @@
       <section>
         <h3>Paths from handbook.json</h3>
         <p class="settings-note">
-          Personal / Tailwind is a filter on skills, not a separate folder tab.
-          It is computed from <code>personal_skills_dir</code>,
-          <code>tailwind_module_skills_dir</code> (Lola pack), and
-          <code>agents_skills_dir</code>.
+          The All / Personal / Tailwind control filters the skills list.
+          It uses the three folders below:
+          <code>personal_skills_dir</code> (Personal),
+          <code>tailwind_module_skills_dir</code> (full Tailwind pack on disk),
+          and <code>agents_skills_dir</code> (add-on skills such as gws).
+          The Skills column is the number of skill folders found at that path.
         </p>
         <div class="settings-table-wrap">
           <table class="settings-table">
@@ -522,7 +530,7 @@
               <tr>
                 <th>Key</th>
                 <th>Status</th>
-                <th>Skills</th>
+                <th>Skills in folder</th>
                 <th>Resolved path</th>
               </tr>
             </thead>
