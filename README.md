@@ -30,15 +30,11 @@ Then open http://127.0.0.1:9000 instead.
 
 ![My Skills Handbook UI](docs/ui-overview.jpg)
 
-| UI element | Name | What it does |
-| --- | --- | --- |
-| **Cursor** / **Claude** / **Tailwind config** | Tabs | Switch the main area: Cursor skills and rules, Claude skills and rules, or Tailwind config status. |
-| **Skills** / **Rules** | Section tabs | Under Cursor or Claude, choose whether you are browsing skills or rules. Hidden on the Tailwind config tab. |
-| Search field | Live search | Filters the list as you type (every character updates the results). |
-| **All** / **Personal** / **Tailwind** | Source filters | Multi-select chips. Narrow skills by origin. Click again to clear one chip; **All** clears the group. |
-| **All categories** / category chips | Category filters | Multi-select chips. Narrow skills by category. Same toggle behavior as source filters. |
-| Table rows | Expandable rows | Click a row (or its chevron) to open detail for that skill, rule, or config entry. |
-| **Settings** (gear) | Settings | Path diagnostics and **Edit configuration** for `handbook.json`. |
+The top **tabs** switch between Cursor, Claude, and Tailwind config. On Cursor and Claude, the **section tabs** below choose Skills or Rules.
+
+**Live search** narrows the list as you type. Next to it (and on a second row for categories), **filters** are multi-select chips: click to include a source or category, click again to clear it, or choose **All** to reset that group.
+
+Click a table row to expand details. The gear opens **Settings**, where you can review paths and use **Edit configuration** to change `handbook.json`.
 
 ## Upgrade
 
