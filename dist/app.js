@@ -58,6 +58,7 @@
     editCancel: document.getElementById("edit-cancel"),
     editSave: document.getElementById("edit-save"),
     editStatus: document.getElementById("edit-status"),
+    editFilePath: document.getElementById("edit-file-path"),
   };
 
   const CONFIG_GROUPS = [
@@ -578,15 +579,7 @@
           <p class="settings-note">No path or origin issues detected.</p>
         </section>`;
 
-    const handbookAbs = s.handbook_json_resolved || "";
-    const handbookLine = handbookAbs
-      ? `<div class="settings-handbook-line">
-          <button type="button" id="open-config-editor" class="settings-primary">Edit configuration</button>
-          <a class="mono handbook-path-link" href="${escapeHtml(
-            fileHref(handbookAbs)
-          )}">${escapeHtml(handbookAbs)}</a>
-        </div>`
-      : `<div class="settings-handbook-line">
+    const handbookLine = `<div class="settings-handbook-line">
           <button type="button" id="open-config-editor" class="settings-primary">Edit configuration</button>
         </div>`;
 
@@ -868,6 +861,22 @@
     return out;
   }
 
+  function setEditFilePath(absPath, usingExample) {
+    if (!els.editFilePath) return;
+    if (!absPath) {
+      els.editFilePath.hidden = true;
+      els.editFilePath.textContent = "";
+      return;
+    }
+    const label = usingExample ? "Will create" : "File";
+    els.editFilePath.innerHTML = `<span class="edit-file-label">${escapeHtml(
+      label
+    )}</span><a class="edit-file-link" href="${escapeHtml(
+      fileHref(absPath)
+    )}">${escapeHtml(absPath)}</a>`;
+    els.editFilePath.hidden = false;
+  }
+
   async function openConfigEditor() {
     setEditStatus("Loading…");
     if (els.editBackdrop) {
@@ -899,6 +908,7 @@
         }
       }
       state.editInitial = { ...values };
+      setEditFilePath(data.path || "", Boolean(data.using_example));
       renderConfigForm(values);
       setEditStatus(
         data.using_example
@@ -909,6 +919,7 @@
     } catch (err) {
       state.editInitial = {};
       state.editDirty = {};
+      setEditFilePath("", false);
       renderConfigForm({});
       setEditStatus(
         String(err.message || err) + " Start the app with ./serve.sh.",

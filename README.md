@@ -19,7 +19,7 @@ Open http://127.0.0.1:8765
 
 After you change `handbook.json` or add/remove skills on disk: stop the server (Ctrl-C), run `./serve.sh` again, then hard-refresh the browser.
 
-**Settings** (gear, top right) shows path findings and **# skills** counts. Use **Edit configuration** next to the `handbook.json` path to change paths in a form. Unchanged (gray) values are kept as-is; paths you edit are checked when you leave the field. Then **Save and refresh catalog** (localhost only, via `./serve.sh`). Paths only - never paste secrets.
+**Settings** (gear, top right) shows path findings and **# skills** counts. Use **Edit configuration** to change paths in a form (the `handbook.json` path is shown at the top of that editor). Unchanged (gray) values are kept as-is; paths you edit are checked when you leave the field. Then **Save and refresh catalog** (localhost only, via `./serve.sh`). Paths only - never paste secrets.
 
 `dist/skills.json` is written on your machine and gitignored. Do not commit it.
 
