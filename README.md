@@ -12,8 +12,9 @@ Python 3.10+ (stdlib only).
 git clone https://github.com/boazmichaely/skills-handbook.git
 cd skills-handbook
 cp handbook.example.json handbook.json
-# edit handbook.json for this machine, using Settings → Edit configuration after start. More on this below
 ./serve.sh
+# Head on to Settings → Edit configuration to edit handbook.json. More on that below
+
 ```
 
 Open http://127.0.0.1:8765 (that is the default port).
