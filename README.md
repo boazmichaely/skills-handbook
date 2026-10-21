@@ -14,19 +14,20 @@ cd skills-handbook
 cp handbook.example.json handbook.json
 ./serve.sh
 ```
-#### *IMPORTANT* 
-
+#### **IMPORTANT:** 
    Go straight to `Settings → Edit configuration`. More on that [below](#settings)
 
 
-Open http://127.0.0.1:8765 (that is the default port).
 
-If 8765 is already in use, or you prefer another port, start with a different number, for example:
+
+Now open http://127.0.0.1:8765 (that is the default port).
+
+  If 8765 is already in use, or you prefer another port, start with a different number, for example:
 
 ```bash
-PORT=9000 ./serve.sh
+  PORT=9000 ./serve.sh
 ```
-Then open http://127.0.0.1:9000 instead.
+  Then open http://127.0.0.1:9000 instead.
 
 **Note**
 
