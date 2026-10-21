@@ -5,8 +5,8 @@ __pycache__/
 *.pyc
 .DS_Store
 
-# Optional machine-local overrides (paths only; prefer committing handbook.json with ~ defaults).
-# handbook.json
+# Machine-local paths only - never commit (start from handbook.example.json).
+handbook.json
 
 # Accidental gws generate-skills output (never commit)
 skills/
