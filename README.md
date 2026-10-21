@@ -76,7 +76,7 @@ git pull
 
 Hard-refresh the browser (Cmd+Shift+R).
 
-`handbook.json` is gitignored (local-only), so `git pull` does not overwrite your paths. After an upgrade, skim `handbook.example.json` once in case new keys were added; copy any new keys you need into your `handbook.json` (or set them in **Edit configuration**). If you do not have a `handbook.json` yet, run `cp handbook.example.json handbook.json`.
+`handbook.json` is gitignored (local-only). Future pulls do not update it. If it is missing (fresh clone, or an upgrade that removed an old tracked copy), `./serve.sh` creates it from `handbook.example.json`. After an upgrade, skim the example once in case new keys were added; copy any new keys into your `handbook.json` (or set them in **Edit configuration**).
 
 ## `handbook.json`
 
