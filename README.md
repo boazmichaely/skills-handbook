@@ -13,7 +13,7 @@ git clone https://github.com/boazmichaely/skills-handbook.git
 cd skills-handbook
 cp handbook.example.json handbook.json
 ./serve.sh
-# Head on to Settings → Edit configuration to edit handbook.json. More on that below
+# IMPORTANT: Go straight to `Settings → Edit configuration`. More on that below
 
 ```
 
