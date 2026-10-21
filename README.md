@@ -14,7 +14,9 @@ cd skills-handbook
 cp handbook.example.json handbook.json
 ./serve.sh
 ```
-# IMPORTANT: Go straight to `Settings → Edit configuration`. More on that [below](#settings)
+#### *IMPORTANT* 
+
+   Go straight to `Settings → Edit configuration`. More on that [below](#settings)
 
 
 Open http://127.0.0.1:8765 (that is the default port).
