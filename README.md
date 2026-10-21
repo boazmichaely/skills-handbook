@@ -1,6 +1,6 @@
 # My Skills Handbook
 
-Validate your Tailwind configuration and explore Cursor and Claude skills and rules - both the ones you inherit from Tailwind and your own personal ones.
+Validate your Tailwind configuration and explore Cursor and Claude skills and rules - both the ones you inherit from Tailwind and your personal ones.
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@ Python 3.10+ (stdlib only).
 git clone https://github.com/boazmichaely/skills-handbook.git
 cd skills-handbook
 cp handbook.example.json handbook.json
-# edit handbook.json for this machine, or use Settings → Edit configuration after start
+# edit handbook.json for this machine, using Settings → Edit configuration after start. More on this below
 ./serve.sh
 ```
 
@@ -44,7 +44,7 @@ Click a table row to expand it. You get a short detail panel: the path on disk, 
 
 ![Expanded skill detail](images/skill-expanded.png)
 
-From there, **View full SKILL.md** opens the underlying skill file in the same panel (frontmatter and body). Use **Hide full SKILL.md** to collapse that layer again.
+From there, **View full SKILL.md** opens the underlying skill file in the same panel. Use **Hide full SKILL.md** to collapse that layer again.
 
 ![Full SKILL.md view](images/skill-full-md.png)
 
@@ -59,7 +59,7 @@ The panel lists every key from `handbook.json`: whether the path was **found** o
 
 ![Settings panel](images/settings-panel.png)
 
-**Edit configuration** opens a form for those same paths (the `handbook.json` file path is shown at the top). Gray fields are unchanged defaults - the app does not require those folders to exist until you edit them. Change a path, leave the field to validate it, then **Save and refresh catalog** (only works when you started with `./serve.sh`). Paths only - never paste secrets into the form.
+**Edit configuration** opens a form for those same paths (the `handbook.json` file path is shown at the top). 
 
 ![Edit configuration](images/edit-configuration.png)
 
@@ -76,13 +76,19 @@ git pull
 
 Hard-refresh the browser (Cmd+Shift+R).
 
-`handbook.json` is gitignored (local-only), so future pulls do not update it. Create it once with `cp handbook.example.json handbook.json` if you do not have one. After an upgrade, skim the example once in case new keys were added; copy any new keys into your `handbook.json` (or set them in **Edit configuration**).
+`handbook.json` is gitignored (local-only), so future pulls do not update it. 
+Create it once with `cp handbook.example.json handbook.json`. 
 
 ## `handbook.json`
 
-This file tells the handbook where to look on **your** computer. It is a list of folders and token-file paths - not the secrets themselves. If a path is wrong, a tab can look empty, filters can tag skills incorrectly, or Settings will show **missing**.
+This file tells the handbook where to look on **your** computer. 
+It is a list of folders and token-file paths for the secrets used by your skills (there may be gaps in this part, let me know when you find one!)
+Wrong paths can explain why a tab looks empty, filters tag skills incorrectly, or Settings show as **missing**.
 
-The repo ships `handbook.example.json` only. Copy it once to `handbook.json` for your machine (`cp handbook.example.json handbook.json`), then edit that file in a text editor or use **Settings → Edit configuration**. To recover defaults, copy from the example again. Use `~` for your home directory; it expands when the handbook starts.
+The repo ships `handbook.example.json` only. Copy it once to `handbook.json` for your machine, then edit that file using **Settings → Edit configuration**. 
+To recover defaults, copy from the example again. Use `~` for your home directory; it expands when the handbook starts.
+Typical defaults are in `handbook.example.json` 
+(for example `~/.cursor/skills`, `~/.claude/skills`, `~/Projects/my-cursor-skills`, `~/.config/tailwind`, `~/.agents/skills`, and the `~/code/…` token file paths).
 
 | Key | What it points at |
 | --- | --- |
@@ -99,7 +105,6 @@ The repo ships `handbook.example.json` only. Copy it once to `handbook.json` for
 | `rh_offline_token_path` | Path to the Red Hat Case Management offline token **file** (status only) |
 | `rh_offline_token_plain_path` | Optional plain-KEY copy of that token if you use one (status only; `""` if unused) |
 
-Typical defaults are in `handbook.example.json` (for example `~/.cursor/skills`, `~/.claude/skills`, `~/Projects/my-cursor-skills`, `~/.config/tailwind`, `~/.agents/skills`, and the `~/code/…` token file paths).
 
 ### Personal vs Tailwind
 
@@ -124,7 +129,8 @@ Do not commit secrets or `dist/skills.json`.
 
 ## Troubleshooting
 
-Open **Settings** (gear) first. Check **Suspicious** and the paths table: **Status**, **# skills**, and **Resolved path**. **# skills** is how many skill folders exist at that path - useful when Personal / Tailwind tagging looks wrong.
+Open **Settings** (gear) first. Check **Suspicious** and the paths table: **Status**, **# skills**, and **Resolved path**. 
+**# skills** is how many skill folders exist at that path - useful when Personal / Tailwind tagging looks wrong.
 
 | What you see | Likely cause | What to do |
 | --- | --- | --- |
@@ -141,4 +147,5 @@ Open **Settings** (gear) first. Check **Suspicious** and the paths table: **Stat
 | Edit configuration cannot load or save | The app was not started with `./serve.sh` | Stop any plain static file server; run `./serve.sh` so the localhost API is available |
 | Port already in use, or the page will not open on 8765 | Another process is using that port | Run `PORT=9000 ./serve.sh` (or another free port) and open that URL |
 
-When origin tags still look wrong, compare **# skills** for `cursor.skills_dir`, the Tailwind pack path, and `agents_skills_dir`. If the pack count is near zero while agents is not, the pack path is the problem.
+When origin tags still look wrong, compare **# skills** for `cursor.skills_dir`, the Tailwind pack path, and `agents_skills_dir`. 
+If the pack count is near zero while agents is not, the pack path is the problem.
